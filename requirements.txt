@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+sqlalchemy
+asyncpg
+pydantic
+pydantic-settings
+python-dotenv
+pytest
+httpx
+pytest-asyncio
+aiosqlite
+PyJWT
+cryptography
+passlib[bcrypt]
+google-genai
+aiofiles
+apscheduler

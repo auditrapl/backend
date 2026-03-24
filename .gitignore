@@ -1,0 +1,48 @@
+# ── Sekrety ───────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Python ────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+venv/
+.venv/
+env/
+
+# ── IDE ───────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS ────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Logi / debug ─────────────────────────────────────
+app/api/logs/
+debug_env.py
+fix.py
+fix2.py
+insert_mocks.py
+seed.py
+verify_setup.py
+*.log
+
+# ── Certyfikaty ──────────────────────────────────────
+*.pem
+*.key
+*.crt
