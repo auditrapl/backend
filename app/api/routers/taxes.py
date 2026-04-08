@@ -5,12 +5,13 @@ from uuid import UUID
 
 from app.database import get_db
 from app.api.deps import get_current_user
+from app.auth import verify_token
 from app.schemas import TaxRequest, TaxAnalysisReport, UserResponse
 from app.services.taxes_agent import run_taxes_agent
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(verify_token)])
 
 @router.post("/analyze", response_model=TaxAnalysisReport)
 async def analyze_taxes(

@@ -12,9 +12,10 @@ from pydantic import BaseModel
 from app.database import get_db
 from app.models import Document, CompanyDocument, User
 from app.api.deps import get_current_user
+from app.auth import verify_token
 from app.services.webdav_service import WebDAVService
 
-router = APIRouter(prefix="/api/documents", tags=["Documents"])
+router = APIRouter(prefix="/api/documents", tags=["Documents"], dependencies=[Depends(verify_token)])
 webdav_service = WebDAVService()
 
 MAX_FILE_SIZE = 50 * 1024 * 1024 # 50 MB

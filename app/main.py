@@ -1,5 +1,5 @@
 import logging
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -12,6 +12,7 @@ from app.services.context_snapshots import (
     trigger_weekly_snapshots_for_all_companies,
     trigger_monthly_snapshots_for_all_companies,
 )
+from app.auth import verify_token
 
 logger = logging.getLogger("auditra")
 
@@ -97,5 +98,5 @@ app.include_router(context_router.router, prefix="/api/context", tags=["Context 
 app.include_router(cashflow.router, prefix="/api/cashflow", tags=["Cashflow API"])
 
 @app.get("/")
-async def root():
+async def root(_: dict = Depends(verify_token)):
     return {"message": "Welcome to Auditra API"}

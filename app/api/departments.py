@@ -8,8 +8,9 @@ from app.database import get_db
 from app.models import Department, User, Company
 from app.schemas import DepartmentCreate, DepartmentUpdate, DepartmentResponse, DepartmentBudgetUpdate
 from app.api.deps import get_current_user
+from app.auth import verify_token
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(verify_token)])
 
 @router.post("", response_model=DepartmentResponse, status_code=status.HTTP_201_CREATED)
 async def create_department(

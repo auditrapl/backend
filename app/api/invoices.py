@@ -8,11 +8,12 @@ from app.database import get_db
 from app.models import Invoice, User
 from app.schemas import InvoiceCreate, InvoiceResponse, InvoiceUpdate
 from app.api.deps import get_current_user
+from app.auth import verify_token
 from app.services.audit_service import AuditService
 from app.services.notification_service import NotificationService
 from app.services.context_operational import refresh_safecash_background
 
-router = APIRouter(tags=["invoices"])
+router = APIRouter(tags=["invoices"], dependencies=[Depends(verify_token)])
 
 @router.get("", response_model=dict)
 async def get_invoices(

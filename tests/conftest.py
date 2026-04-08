@@ -2,25 +2,33 @@ import sys
 import os
 import pytest
 import asyncio
+from fastapi import Depends, FastAPI
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.pool import StaticPool
-import importlib
 
 # 1. Setup Environment + Python Path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-# Mock Supabase Secret BEFORE importing app modules
-os.environ["SUPABASE_JWT_SECRET"] = "TEST_SECRET_KEY_12345"
+# Configure env BEFORE importing app modules
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
+os.environ["SUPABASE_URL"] = "https://test-project.supabase.co"
+os.environ["SUPABASE_SERVICE_ROLE_KEY"] = "test-service-role-key"
 
 # Now import app modules
-from app.main import app
+from app.api import auth, invoices, departments
+from app.auth import verify_token
 from app.database import get_db, Base
-from app.core import security
 
-# Force reload security to pick up the new env var if it was already imported
-importlib.reload(security)
+app = FastAPI(title="Auditra API Test")
+app.include_router(auth.router, prefix="/auth", tags=["Auth"])
+app.include_router(invoices.router, prefix="/invoices", tags=["Invoices"])
+app.include_router(departments.router, prefix="/departments", tags=["Departments"])
+
+
+@app.get("/")
+async def root(_: dict = Depends(verify_token)):
+    return {"message": "Welcome to Auditra API"}
 
 # 2. Setup In-Memory DB
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -39,7 +47,7 @@ app.dependency_overrides[get_db] = override_get_db
 
 @pytest.fixture(scope="session")
 def event_loop():
-    """Create an instance of the default event loop for each test case."""
+    """Create an event loop for async tests."""
     loop = asyncio.new_event_loop()
     yield loop
     loop.close()

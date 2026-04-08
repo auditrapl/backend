@@ -7,8 +7,9 @@ from app.database import get_db
 from app.models import Notification, User
 from app.schemas import NotificationResponse
 from app.api.deps import get_current_user
+from app.auth import verify_token
 
-router = APIRouter(tags=["notifications"])
+router = APIRouter(tags=["notifications"], dependencies=[Depends(verify_token)])
 
 @router.get("", response_model=List[NotificationResponse])
 async def get_notifications(

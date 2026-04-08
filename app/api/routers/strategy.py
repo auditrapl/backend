@@ -4,11 +4,12 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 from app.api.deps import get_current_user, get_db
+from app.auth import verify_token
 from app.models import User, StrategyHistory
 from app.schemas import StrategyRequest, StrategyResponse, StrategyHistoryCreate, StrategyHistoryResponse
 from app.services.strategy_agent import run_strategy_agent
 
-router = APIRouter(prefix="/api/strategy", tags=["Strategy Module API"])
+router = APIRouter(prefix="/api/strategy", tags=["Strategy Module API"], dependencies=[Depends(verify_token)])
 
 @router.post("/simulate", response_model=StrategyResponse)
 async def simulate_strategy_endpoint(

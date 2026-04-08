@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from app.api.deps import get_current_user
+from app.auth import verify_token
 from app.database import get_db, AsyncSessionLocal
 from app.schemas import CfoRequest, CfoReport, UserResponse, SharedCfoReportCreate, SharedCfoReportResponse, ProactiveInsightResponse, MorningBriefingResponse
 from app.models import SharedCfoReport, ProactiveInsight, CompanyContextModel
@@ -15,7 +16,7 @@ from app.services.morning_briefing import generate_briefing_for_company
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(verify_token)])
 
 @router.post("/simulate")
 async def simulate_cfo_scenario(

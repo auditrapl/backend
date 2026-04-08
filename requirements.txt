@@ -16,3 +16,4 @@ google-genai
 aiofiles
 python-multipart
 apscheduler
+supabase>=2.0.0

@@ -12,6 +12,7 @@ from sqlalchemy import select, desc
 from pydantic import BaseModel
 
 from app.api.deps import get_current_user
+from app.auth import verify_token
 from app.database import get_db, AsyncSessionLocal
 from app.schemas import UserResponse
 from app.models import CompanyContextModel, ContextSnapshotModel
@@ -34,7 +35,7 @@ from app.services.context_snapshots import (
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(verify_token)])
 
 
 # ==============================================================================

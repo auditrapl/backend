@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
+from app.auth import verify_token
 from app.database import get_db
 from app.models import User, Company, CompanyContextModel
 from app.services.context_operational import (
@@ -29,7 +30,7 @@ from sqlalchemy import select
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(tags=["cashflow"])
+router = APIRouter(tags=["cashflow"], dependencies=[Depends(verify_token)])
 
 
 async def _ensure_canonical_from_company(

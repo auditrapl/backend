@@ -12,9 +12,10 @@ from app.database import get_db
 from app.models import Invoice, User
 from app.schemas import InvoiceResponse, AuditSummaryResponse, BatchAuditResponse
 from app.api.deps import get_current_user
+from app.auth import verify_token
 from app.services.audit_service import AuditService
 
-router = APIRouter(tags=["Dashboard AI"])
+router = APIRouter(tags=["Dashboard AI"], dependencies=[Depends(verify_token)])
 
 
 # ── 1. Single Invoice Audit ──────────────────────────────────

@@ -3,11 +3,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.database import get_db
 from app.api.deps import get_current_user
+from app.auth import verify_token
 from app.models import Report, User
 from app.schemas import ReportCreate, ReportResponse
 from app.services.ai_report_service import ReportOrchestrator
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(verify_token)])
 
 from fastapi.responses import StreamingResponse
 

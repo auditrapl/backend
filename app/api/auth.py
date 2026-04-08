@@ -1,12 +1,14 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.database import get_db
 from app.models import User, Company, CompanyContextModel
 from app.schemas import CompanyCreate, CompanyResponse, UserResponse
 from app.api.deps import get_current_user
+from app.auth import verify_token, verify_supabase_token, set_auth_cookie, clear_auth_cookie
 from app.services.context_canonical import (
     CanonicalContext, CompanyIdentity, TaxRegime, BusinessModelDetail,
 )
@@ -14,6 +16,23 @@ from app.services.context_canonical import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["auth"])
+
+
+class SessionCookieRequest(BaseModel):
+    access_token: str
+
+
+@router.post("/session")
+async def set_session_cookie(payload: SessionCookieRequest, response: Response):
+    verify_supabase_token(payload.access_token)
+    set_auth_cookie(response, payload.access_token)
+    return {"message": "Session cookie set"}
+
+
+@router.post("/logout")
+async def logout(response: Response):
+    clear_auth_cookie(response)
+    return {"message": "Session cookie cleared"}
 
 
 def _infer_cit_rate(company_data: CompanyCreate) -> float | None:
@@ -48,6 +67,7 @@ def _infer_pit_form(company_data: CompanyCreate) -> str | None:
 @router.post("/register-company", response_model=CompanyResponse)
 async def register_company(
     company_data: CompanyCreate,
+    _: dict = Depends(verify_token),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -131,5 +151,8 @@ async def register_company(
     return new_company
 
 @router.get("/me", response_model=UserResponse)
-async def read_users_me(current_user: User = Depends(get_current_user)):
+async def read_users_me(
+    _: dict = Depends(verify_token),
+    current_user: User = Depends(get_current_user)
+):
     return current_user
