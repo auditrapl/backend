@@ -29,6 +29,7 @@ class Company(AsyncAttrs, Base):
     company_documents: Mapped[list["CompanyDocument"]] = relationship("CompanyDocument", back_populates="company", cascade="all, delete-orphan")
     company_contexts: Mapped[list["CompanyContextModel"]] = relationship("CompanyContextModel", back_populates="company", cascade="all, delete-orphan")
     context_snapshots: Mapped[list["ContextSnapshotModel"]] = relationship("ContextSnapshotModel", back_populates="company", cascade="all, delete-orphan")
+    conversations: Mapped[list["Conversation"]] = relationship("Conversation", back_populates="company", cascade="all, delete-orphan")
 
 class CompanyContextModel(AsyncAttrs, Base):
     """
@@ -266,3 +267,36 @@ class CompanyDocument(AsyncAttrs, Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     company: Mapped["Company"] = relationship("Company", back_populates="company_documents")
+
+
+class Conversation(AsyncAttrs, Base):
+    """Wątek rozmowy CFO — ciągły czat z pamięcią między sesjami."""
+    __tablename__ = "conversations"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    company_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("companies.id"), nullable=False, index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    title: Mapped[str | None] = mapped_column(String, nullable=True)  # Auto-generowany z pierwszej wiadomości
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)  # Auto-summary starszych wiadomości
+    message_count: Mapped[int] = mapped_column(Integer, default=0)
+    is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    company: Mapped["Company"] = relationship("Company", back_populates="conversations")
+    user: Mapped["User"] = relationship("User")
+    messages: Mapped[list["Message"]] = relationship("Message", back_populates="conversation", cascade="all, delete-orphan", order_by="Message.created_at")
+
+
+class Message(AsyncAttrs, Base):
+    """Pojedyncza wiadomość w wątku CFO."""
+    __tablename__ = "messages"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    conversation_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("conversations.id"), nullable=False, index=True)
+    role: Mapped[str] = mapped_column(String, nullable=False)  # "user" | "assistant" | "system"
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    metadata_json: Mapped[dict | None] = mapped_column("metadata", JSON, nullable=True)  # Raporty CFO, UI blocks, suggested questions
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    conversation: Mapped["Conversation"] = relationship("Conversation", back_populates="messages")

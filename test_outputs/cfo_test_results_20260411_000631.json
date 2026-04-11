@@ -1,0 +1,289 @@
+{
+  "timestamp": "2026-04-11T00:24:25.277378",
+  "company_id": "4a00cc9b-0aac-4d55-8873-06696b7188b3",
+  "summary": {
+    "passed": 11,
+    "failed": 6,
+    "errored": 0,
+    "total": 17
+  },
+  "results": [
+    {
+      "id": "T-001",
+      "name": "Ile mam kasy (SafeCash test)",
+      "group": "A",
+      "status": "FAIL",
+      "route": "instant",
+      "response_type": "chat",
+      "duration_sec": 18.45,
+      "tool_calls": 1,
+      "blocks_found": [],
+      "errors": [
+        "SafeCash nie znaleziony w zakresie 100000-200000. Liczby > 10k: []"
+      ]
+    },
+    {
+      "id": "T-002",
+      "name": "Ile faktur w systemie",
+      "group": "A",
+      "status": "PASS",
+      "route": "instant",
+      "response_type": "chat",
+      "duration_sec": 13.89,
+      "tool_calls": 1,
+      "blocks_found": [],
+      "errors": []
+    },
+    {
+      "id": "T-003",
+      "name": "Kto jest najwiekszym klientem",
+      "group": "A",
+      "status": "FAIL",
+      "route": "analysis",
+      "response_type": "dashboard",
+      "duration_sec": 53.84,
+      "tool_calls": 1,
+      "blocks_found": [
+        "metric_grid",
+        "data_table",
+        "text_card"
+      ],
+      "errors": [
+        "Route: oczekiwano 'instant', dostano 'analysis'"
+      ]
+    },
+    {
+      "id": "T-004",
+      "name": "Ile zaleglosci",
+      "group": "A",
+      "status": "PASS",
+      "route": "instant",
+      "response_type": "dashboard",
+      "duration_sec": 14.94,
+      "tool_calls": 1,
+      "blocks_found": [
+        "metric_grid"
+      ],
+      "errors": []
+    },
+    {
+      "id": "T-005",
+      "name": "Najwyzszy koszt kontrahent",
+      "group": "A",
+      "status": "FAIL",
+      "route": "analysis",
+      "response_type": "dashboard",
+      "duration_sec": 56.91,
+      "tool_calls": 1,
+      "blocks_found": [
+        "metric_grid",
+        "chart",
+        "data_table"
+      ],
+      "errors": [
+        "Route: oczekiwano 'instant', dostano 'analysis'"
+      ]
+    },
+    {
+      "id": "T-006",
+      "name": "Lista kontrahentow z przychodami",
+      "group": "B",
+      "status": "PASS",
+      "route": "instant",
+      "response_type": "dashboard",
+      "duration_sec": 23.06,
+      "tool_calls": 1,
+      "blocks_found": [
+        "metric_grid",
+        "data_table",
+        "text_card"
+      ],
+      "errors": []
+    },
+    {
+      "id": "T-007",
+      "name": "Niezaplacone faktury",
+      "group": "B",
+      "status": "PASS",
+      "route": "instant",
+      "response_type": "dashboard",
+      "duration_sec": 41.87,
+      "tool_calls": 1,
+      "blocks_found": [
+        "alert_banner",
+        "metric_grid",
+        "data_table",
+        "text_card"
+      ],
+      "errors": []
+    },
+    {
+      "id": "T-008",
+      "name": "Struktura kosztow",
+      "group": "B",
+      "status": "PASS",
+      "route": "analysis",
+      "response_type": "dashboard",
+      "duration_sec": 85.88,
+      "tool_calls": 1,
+      "blocks_found": [
+        "metric_grid",
+        "chart",
+        "data_table",
+        "text_card"
+      ],
+      "errors": []
+    },
+    {
+      "id": "T-011",
+      "name": "Analiza cashflow",
+      "group": "C",
+      "status": "PASS",
+      "route": "analysis",
+      "response_type": "dashboard",
+      "duration_sec": 94.82,
+      "tool_calls": 4,
+      "blocks_found": [
+        "alert_banner",
+        "metric_grid",
+        "chart",
+        "data_table",
+        "text_card"
+      ],
+      "errors": []
+    },
+    {
+      "id": "T-012",
+      "name": "Ryzyko koncentracji klientow",
+      "group": "C",
+      "status": "PASS",
+      "route": "analysis",
+      "response_type": "dashboard",
+      "duration_sec": 83.86,
+      "tool_calls": 2,
+      "blocks_found": [
+        "alert_banner",
+        "metric_grid",
+        "chart",
+        "data_table",
+        "text_card"
+      ],
+      "errors": []
+    },
+    {
+      "id": "T-013",
+      "name": "Analiza naleznosci",
+      "group": "C",
+      "status": "PASS",
+      "route": "analysis",
+      "response_type": "dashboard",
+      "duration_sec": 123.09,
+      "tool_calls": 8,
+      "blocks_found": [
+        "alert_banner",
+        "metric_grid",
+        "text_card",
+        "data_table"
+      ],
+      "errors": []
+    },
+    {
+      "id": "T-016",
+      "name": "Zatrudnienie handlowca",
+      "group": "D",
+      "status": "FAIL",
+      "route": "analysis",
+      "response_type": "dashboard",
+      "duration_sec": 93.57,
+      "tool_calls": 6,
+      "blocks_found": [
+        "alert_banner",
+        "metric_grid",
+        "text_card",
+        "data_table",
+        "text_card"
+      ],
+      "errors": [
+        "Route: oczekiwano 'strategic_debate', dostano 'analysis'"
+      ]
+    },
+    {
+      "id": "T-017",
+      "name": "Inwestycja w marketing",
+      "group": "D",
+      "status": "FAIL",
+      "route": "analysis",
+      "response_type": "dashboard",
+      "duration_sec": 80.28,
+      "tool_calls": 5,
+      "blocks_found": [
+        "alert_banner",
+        "metric_grid",
+        "text_card",
+        "text_card"
+      ],
+      "errors": [
+        "Route: oczekiwano 'strategic_debate', dostano 'analysis'"
+      ]
+    },
+    {
+      "id": "NEG-001",
+      "name": "Symulacja nie trafia do kontekstu",
+      "group": "NEG",
+      "status": "FAIL",
+      "route": "analysis",
+      "response_type": "dashboard",
+      "duration_sec": 74.83,
+      "tool_calls": 3,
+      "blocks_found": [
+        "metric_grid",
+        "text_card"
+      ],
+      "errors": [
+        "Niedozwolony tekst obecny: '5 000 000'"
+      ]
+    },
+    {
+      "id": "NEG-002",
+      "name": "Brak timeline bez pytania o plan",
+      "group": "NEG",
+      "status": "PASS",
+      "route": "instant",
+      "response_type": "chat",
+      "duration_sec": 10.45,
+      "tool_calls": 1,
+      "blocks_found": [],
+      "errors": []
+    },
+    {
+      "id": "NEG-003",
+      "name": "Brak dramatycznego tonu",
+      "group": "NEG",
+      "status": "PASS",
+      "route": "strategic_debate",
+      "response_type": "dashboard",
+      "duration_sec": 124.82,
+      "tool_calls": 19,
+      "blocks_found": [
+        "alert_banner",
+        "metric_grid",
+        "text_card",
+        "data_table",
+        "chart"
+      ],
+      "errors": []
+    },
+    {
+      "id": "NEG-001b",
+      "name": "Implicit Learning bramka — symulacja nie zapisuje do L2",
+      "group": "NEG",
+      "status": "PASS",
+      "route": null,
+      "response_type": null,
+      "duration_sec": 78.87,
+      "tool_calls": 0,
+      "blocks_found": [],
+      "errors": []
+    }
+  ]
+}

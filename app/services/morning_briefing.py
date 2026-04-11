@@ -97,3 +97,78 @@ async def generate_daily_briefings_for_all_companies() -> None:
             await generate_briefing_for_company(db, company_id, context_data or {})
 
     logger.info("[NightShift] ═══ Nocna Zmiana zakończona ═══")
+
+
+async def send_morning_emails_for_all_companies() -> None:
+    """CRON entry point (07:00): wysyła pre-generowane briefings emailem do userów."""
+    from app.models import User, Company
+    from app.services.email_service import send_briefing_email
+
+    logger.info("[MorningEmail] ═══ Wysyłka emaili rozpoczęta ═══")
+
+    async with AsyncSessionLocal() as db:
+        # Pobierz wszystkie insighty z summary (wygenerowane o 03:00)
+        result = await db.execute(
+            select(ProactiveInsight)
+            .where(ProactiveInsight.summary.isnot(None))
+            .order_by(ProactiveInsight.created_at.desc())
+        )
+        summary_insights = result.scalars().all()
+
+        if not summary_insights:
+            logger.info("[MorningEmail] No briefings to send.")
+            return
+
+        # Grupuj po company_id
+        by_company: dict[uuid.UUID, list] = {}
+        for ins in summary_insights:
+            by_company.setdefault(ins.company_id, []).append(ins)
+
+        for company_id, insights_list in by_company.items():
+            # Pobierz summary z pierwszego insightu
+            summary = insights_list[0].summary or ""
+
+            # Pobierz wszystkie insighty tej firmy (nie tylko z summary)
+            all_result = await db.execute(
+                select(ProactiveInsight)
+                .where(ProactiveInsight.company_id == company_id)
+                .order_by(ProactiveInsight.created_at.desc())
+                .limit(3)
+            )
+            all_insights = all_result.scalars().all()
+
+            # Pobierz nazwę firmy
+            company_result = await db.execute(
+                select(Company).where(Company.id == company_id)
+            )
+            company = company_result.scalar_one_or_none()
+            company_name = company.name if company else "Twoja firma"
+
+            # Pobierz userów firmy
+            users_result = await db.execute(
+                select(User).where(User.company_id == company_id)
+            )
+            users = users_result.scalars().all()
+
+            if not users:
+                logger.info(f"[MorningEmail] No users for company {company_id}, skipping")
+                continue
+
+            insights_data = [
+                {
+                    "title": ins.title,
+                    "description": ins.description,
+                    "urgency": ins.urgency,
+                }
+                for ins in all_insights
+            ]
+
+            for user in users:
+                send_briefing_email(
+                    to_email=user.email,
+                    company_name=company_name,
+                    summary=summary,
+                    insights=insights_data,
+                )
+
+    logger.info("[MorningEmail] ═══ Wysyłka zakończona ═══")

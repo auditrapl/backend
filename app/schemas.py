@@ -397,7 +397,7 @@ class UIBlock(BaseModel):
     message: Optional[str] = Field(None, description="Treść wiadomości (alert_banner)")
     urgency: Optional[str] = Field(None, description="Wybór: 'high', 'medium', 'low', 'success'")
     theme: Optional[str] = Field(None, description="Wybór: 'neutral', 'success', 'warning', 'danger'")
-    chart_type: Optional[str] = Field(None, description="Wybór: 'line', 'area', 'bar_vertical', 'bar_horizontal', 'waterfall', 'donut', 'pie'")
+    chart_type: Optional[str] = Field(None, description="Wybór: 'line', 'area', 'prediction_band', 'bar_vertical', 'bar_horizontal', 'waterfall', 'donut', 'pie'")
     data: Optional[list[ChartDataPoint]] = Field(None, description="Dane wykresu")
     series_labels: Optional[list[str]] = None
     metrics: Optional[list[MetricItem]] = None
@@ -421,6 +421,7 @@ class UIBlock(BaseModel):
 
 class TriageDecision(BaseModel):
     route: Literal["instant", "analysis", "strategic_debate"] = Field(description="Typ zapytania: instant (proste fakty), analysis (analiza jednego zagadnienia), strategic_debate (złożone dylematy)")
+    mode: Literal["INVESTMENT", "DIAGNOSTIC"] = Field(default="DIAGNOSTIC", description="INVESTMENT jeśli użytkownik proponuje wydatek/inwestycję/zatrudnienie. DIAGNOSTIC jeśli pyta o stan/problem/analizę.")
     reasoning: str = Field(description="Krótkie uzasadnienie wyboru")
 
 class AgentTimelineStep(BaseModel):
@@ -495,6 +496,63 @@ class ProactiveInsightResponse(BaseModel):
 class MorningBriefingResponse(BaseModel):
     summary: str | None = None
     insights: list[ProactiveInsightResponse]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONVERSATION / CHAT — Ciągły czat CFO
+# ─────────────────────────────────────────────────────────────────────────────
+
+class ConversationCreate(BaseModel):
+    title: Optional[str] = None  # Jeśli None, auto-generowany z pierwszej wiadomości
+
+class ConversationResponse(BaseModel):
+    id: UUID
+    company_id: UUID
+    user_id: UUID
+    title: Optional[str]
+    summary: Optional[str]
+    message_count: int
+    is_archived: bool
+    created_at: datetime
+    updated_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+class ConversationListItem(BaseModel):
+    """Lekki schemat do listy wątków w sidebarze."""
+    id: UUID
+    title: Optional[str]
+    message_count: int
+    is_archived: bool
+    created_at: datetime
+    updated_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+class MessageCreate(BaseModel):
+    content: str
+    document_ids: list[str] = Field(default_factory=list, description="IDs dokumentów załączonych do wiadomości")
+
+class MessageResponse(BaseModel):
+    id: UUID
+    conversation_id: UUID
+    role: str
+    content: str
+    metadata_json: Optional[Dict[str, Any]] = Field(None, alias="metadata_json")
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+class ConversationWithMessages(BaseModel):
+    """Pełny wątek z wiadomościami."""
+    id: UUID
+    company_id: UUID
+    user_id: UUID
+    title: Optional[str]
+    summary: Optional[str]
+    message_count: int
+    is_archived: bool
+    created_at: datetime
+    updated_at: datetime
+    messages: list[MessageResponse]
+    model_config = ConfigDict(from_attributes=True)
 
 
 class DocumentSummaryOutput(BaseModel):

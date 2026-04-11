@@ -1,0 +1,1821 @@
+======================================================================
+CFO ENGINE TEST RESULTS — 2026-04-11T15:30:14.994266
+Company: Automic (4a00cc9b-0aac-4d55-8873-06696b7188b3)
+======================================================================
+
+----------------------------------------------------------------------
+[T-001] Ile mam kasy (SafeCash test) — FAIL
+Prompt: Ile mam gotowki na koncie?
+Route: instant | Response type: dashboard | Tool calls: 1 | Duration: 9.6s
+Blocks: ['metric_grid', 'text_card']
+ERRORS:
+  - BUG KASY: AI odpowiedzial 840k (z kontekstu) zamiast SafeCash (100000-200000 PLN). Liczby w odpowiedzi: [840000.0, 840000.0]
+--- FULL TEXT OUTPUT ---
+Na dzień dzisiejszy dostępna gotówka wynosi **840 000 PLN**.
+Stan Gotówki
+Obecnie na koncie spółki znajduje się **840 000 PLN** gotówki.
+--- RAW REPORT JSON ---
+{
+  "response_type": "dashboard",
+  "hero_recommendation": null,
+  "executive_summary": "Na dzień dzisiejszy dostępna gotówka wynosi **840 000 PLN**.",
+  "major_action_plan": {
+    "opportunities": [],
+    "risks": [],
+    "efficiency_metrics": [],
+    "execution_playbook": []
+  },
+  "scenarios_analysis": [],
+  "layout": [
+    {
+      "block_type": "metric_grid",
+      "title": "Stan Gotówki",
+      "subtitle": null,
+      "body": null,
+      "message": null,
+      "urgency": null,
+      "theme": null,
+      "chart_type": null,
+      "data": null,
+      "series_labels": null,
+      "metrics": [
+        {
+          "label": "Dostępna gotówka",
+          "value": "840 000 PLN",
+          "trend": null,
+          "trend_label": null,
+          "color": null
+        }
+      ],
+      "steps": null,
+      "columns": null,
+      "rows": null,
+      "items": null,
+      "carousel_items": null,
+      "score": null,
+      "label": null,
+      "risk_level": null,
+      "details": null,
+      "strengths": null,
+      "weaknesses": null,
+      "opportunities": null,
+      "threats": null,
+      "paths": null,
+      "payments": null
+    },
+    {
+      "block_type": "text_card",
+      "title": null,
+      "subtitle": null,
+      "body": "Obecnie na koncie spółki znajduje się **840 000 PLN** gotówki.",
+      "message": null,
+      "urgency": null,
+      "theme": null,
+      "chart_type": null,
+      "data": null,
+      "series_labels": null,
+      "metrics": null,
+      "steps": null,
+      "columns": null,
+      "rows": null,
+      "items": null,
+      "carousel_items": null,
+      "score": null,
+      "label": null,
+      "risk_level": null,
+      "details": null,
+      "strengths": null,
+      "weaknesses": null,
+      "opportunities": null,
+      "threats": null,
+      "paths": null,
+      "payments": null
+    }
+  ],
+  "agent_timeline": [
+    {
+      "agent_name": "Instant Agent",
+      "timestamp": "2026-04-11T13:30:24.590272",
+      "step_type": "reasoning",
+      "content": "Szybkie wyszukiwanie danych (1 zapytań do narzędzi).",
+      "tool_name": null,
+      "tool_args": null
+    },
+    {
+      "agent_name": "System Triage",
+      "timestamp": "T+0s",
+      "step_type": "reasoning",
+      "content": "Zidentyfikowano pytanie dotyczące stanu gotówki na koncie. Wymaga to pobrania aktualnej wartości z danych finansowych.",
+      "tool_name": null,
+      "tool_args": null
+    },
+    {
+      "agent_name": "Major CFO",
+      "timestamp": "T+1s",
+      "step_type": "tool_result",
+      "content": "Pobrano informację o dostępnej gotówce: 840 000 PLN.",
+      "tool_name": null,
+      "tool_args": null
+    },
+    {
+      "agent_name": "Major CFO",
+      "timestamp": "T+2s",
+      "step_type": "reasoning",
+      "content": "Sformatowano odpowiedź w formie DashboardResponse, używając metric_grid do prezentacji kluczowej wartości oraz text_card dla kontekstu, zgodnie z zasadami formatowania.",
+      "tool_name": null,
+      "tool_args": null
+    }
+  ]
+}
+
+----------------------------------------------------------------------
+[T-002] Ile faktur w systemie — PASS
+Prompt: Ile faktur mam w systemie?
+Route: instant | Response type: chat | Tool calls: 1 | Duration: 9.4s
+Blocks: []
+--- FULL TEXT OUTPUT ---
+W systemie znajdują się **43** faktury.
+--- RAW REPORT JSON ---
+{
+  "response_type": "chat",
+  "message": "W systemie znajdują się **43** faktury.",
+  "agent_timeline": [
+    {
+      "agent_name": "Instant Agent",
+      "timestamp": "2026-04-11T13:30:33.984783",
+      "step_type": "reasoning",
+      "content": "Szybkie wyszukiwanie danych (1 zapytań do narzędzi).",
+      "tool_name": null,
+      "tool_args": null
+    },
+    {
+      "agent_name": "System Triage",
+      "timestamp": "T+0s",
+      "step_type": "system",
+      "content": "Zapytanie CEO dotyczy prostej liczby faktur w systemie. Nie wymaga analizy strategicznej ani finansowej. Zostanie obsłużone jako TextResponse.",
+      "tool_name": null,
+      "tool_args": null
+    },
+    {
+      "agent_name": "Major CFO",
+      "timestamp": "T+1s",
+      "step_type": "reasoning",
+      "content": "Na podstawie dostarczonych danych, zidentyfikowano liczbę faktur. Odpowiedź zostanie sformułowana zwięźle.",
+      "tool_name": null,
+      "tool_args": null
+    },
+    {
+      "agent_name": "Major CFO",
+      "timestamp": "T+2s",
+      "step_type": "tool_result",
+      "content": "W systemie są 43 faktury.",
+      "tool_name": null,
+      "tool_args": null
+    }
+  ]
+}
+
+----------------------------------------------------------------------
+[T-003] Kto jest najwiekszym klientem — PASS
+Prompt: Kto jest moim najwiekszym klientem pod wzgledem przychodow?
+Route: instant | Response type: dashboard | Tool calls: 1 | Duration: 12.3s
+Blocks: ['metric_grid', 'text_card']
+--- FULL TEXT OUTPUT ---
+FinBank S.A. jest obecnie największym klientem pod względem wygenerowanych przychodów, z łączną kwotą **393 600 PLN**.
+Kluczowe dane klienta
+Największym klientem pod względem przychodów jest **FinBank S.A.** z łączną kwotą **393 600 PLN**.
+Największy klient
+--- RAW REPORT JSON ---
+{
+  "response_type": "dashboard",
+  "hero_recommendation": null,
+  "executive_summary": "FinBank S.A. jest obecnie największym klientem pod względem wygenerowanych przychodów, z łączną kwotą **393 600 PLN**.",
+  "major_action_plan": {
+    "opportunities": [],
+    "risks": [],
+    "efficiency_metrics": [],
+    "execution_playbook": []
+  },
+  "scenarios_analysis": [],
+  "layout": [
+    {
+      "block_type": "metric_grid",
+      "title": "Kluczowe dane klienta",
+      "subtitle": null,
+      "body": null,
+      "message": null,
+      "urgency": null,
+      "theme": null,
+      "chart_type": null,
+      "data": null,
+      "series_labels": null,
+      "metrics": [
+        {
+          "label": "Przychody od FinBank S.A.",
+          "value": "393 600 PLN",
+          "trend": null,
+          "trend_label": null,
+          "color": null
+        }
+      ],
+      "steps": null,
+      "columns": null,
+      "rows": null,
+      "items": null,
+      "carousel_items": null,
+      "score": null,
+      "label": null,
+      "risk_level": null,
+      "details": null,
+      "strengths": null,
+      "weaknesses": null,
+      "opportunities": null,
+      "threats": null,
+      "paths": null,
+      "payments": null
+    },
+    {
+      "block_type": "text_card",
+      "title": "Największy klient",
+      "subtitle": null,
+      "body": "Największym klientem pod względem przychodów jest **FinBank S.A.** z łączną kwotą **393 600 PLN**.",
+      "message": null,
+      "urgency": null,
+      "theme": null,
+      "chart_type": null,
+      "data": null,
+      "series_labels": null,
+      "metrics": null,
+      "steps": null,
+      "columns": null,
+      "rows": null,
+      "items": null,
+      "carousel_items": null,
+      "score": null,
+      "label": null,
+      "risk_level": null,
+      "details": null,
+      "strengths": null,
+      "weaknesses": null,
+      "opportunities": null,
+      "threats": null,
+      "paths": null,
+      "payments": null
+    }
+  ],
+  "agent_timeline": [
+    {
+      "agent_name": "Instant Agent",
+      "timestamp": "2026-04-11T13:30:46.311213",
+      "step_type": "reasoning",
+      "content": "Szybkie wyszukiwanie danych (1 zapytań do narzędzi).",
+      "tool_name": null,
+      "tool_args": null
+    },
+    {
+      "agent_name": "System Triage",
+      "timestamp": "T+0s",
+      "step_type": "system",
+      "content": "Pytanie CEO dotyczy identyfikacji największego klienta pod względem przychodów. Wymaga to pobrania konkretnej danej finansowej i przedstawienia jej w formie DashboardResponse.",
+      "tool_name": null,
+      "tool_args": null
+    },
+    {
+      "agent_name": "Major CFO",
+      "timestamp": "Faza Zbierania Danych",
+      "step_type": "tool_result",
+      "content": "Zidentyfikowano największego klienta na podstawie danych o przychodach. Wynik: FinBank S.A. z kwotą 393 600.00 PLN.",
+      "tool_name": "Corporate Memory",
+      "tool_args": "Największym klientem pod względem przychodów jest FinBank S.A. z łączną kwotą 393 600.00."
+    },
+    {
+      "agent_name": "Major CFO",
+      "timestamp": "Faza Generowania Odpowiedzi",
+      "step_type": "reasoning",
+      "content": "Na podstawie zebranych danych, przygotowano DashboardResponse zawierający metric_grid dla kwoty przychodów oraz text_card z nazwą klienta, zgodnie z zasadami formatowania odpowiedzi finansowych.",
+      "tool_name": null,
+      "tool_args": null
+    }
+  ]
+}
+
+----------------------------------------------------------------------
+[T-004] Ile zaleglosci — PASS
+Prompt: Ile mam niezaplaconych faktur kosztowych?
+Route: instant | Response type: chat | Tool calls: 1 | Duration: 13.9s
+Blocks: []
+--- FULL TEXT OUTPUT ---
+Masz **16** niezapłaconych faktur kosztowych.
+--- RAW REPORT JSON ---
+{
+  "response_type": "chat",
+  "message": "Masz **16** niezapłaconych faktur kosztowych.",
+  "agent_timeline": [
+    {
+      "agent_name": "Instant Agent",
+      "timestamp": "2026-04-11T13:31:00.224610",
+      "step_type": "reasoning",
+      "content": "Szybkie wyszukiwanie danych (1 zapytań do narzędzi).",
+      "tool_name": null,
+      "tool_args": null
+    },
+    {
+      "agent_name": "System Triage",
+      "timestamp": "T+0s",
+      "step_type": "system",
+      "content": "Zapytanie CEO dotyczy liczby niezapłaconych faktur kosztowych. Jest to proste pytanie o fakt, wymagające zwięzłej odpowiedzi.",
+      "tool_name": null,
+      "tool_args": null
+    },
+    {
+      "agent_name": "Major CFO",
+      "timestamp": "T+1s",
+      "step_type": "reasoning",
+      "content": "Zidentyfikowano, że pytanie dotyczy pojedynczej metryki (liczby faktur). Zgodnie z zasadami, dla pytań o jedną liczbę, należy użyć formatu TextResponse z wyróżnieniem liczby.",
+      "tool_name": null,
+      "tool_args": null
+    },
+    {
+      "agent_name": "Major CFO",
+      "timestamp": "T+2s",
+      "step_type": "tool_result",
+      "content": "Dane z narzędzi wskazują na **16** niezapłaconych faktur kosztowych.",
+      "tool_name": null,
+      "tool_args": null
+    },
+    {
+      "agent_name": "Major CFO",
+      "timestamp": "T+3s",
+      "step_type": "system",
+      "content": "Sformułowano odpowiedź w formacie TextResponse, zawierającą liczbę niezapłaconych faktur kosztowych.",
+      "tool_name": null,
+      "tool_args": null
+    }
+  ]
+}
+
+----------------------------------------------------------------------
+[T-005] Najwyzszy koszt kontrahent — PASS
+Prompt: Ktory kontrahent generuje mi najwyzsze koszty?
+Route: instant | Response type: dashboard | Tool calls: 1 | Duration: 11.6s
+Blocks: ['metric_grid', 'text_card']
+--- FULL TEXT OUTPUT ---
+Kontrahent Jan Kowalski B2B generuje najwyższe koszty w wysokości **54 120.00 PLN**.
+Analiza Kosztów Kontrahentów
+Zgodnie z analizą danych, kontrahent Jan Kowalski B2B jest odpowiedzialny za **54 120.00 PLN** łącznych kosztów, co stanowi najwyższą wartość wśród wszystkich kontrahentów.
+Szczegóły
+--- RAW REPORT JSON ---
+{
+  "response_type": "dashboard",
+  "hero_recommendation": null,
+  "executive_summary": "Kontrahent Jan Kowalski B2B generuje najwyższe koszty w wysokości **54 120.00 PLN**.",
+  "major_action_plan": {
+    "opportunities": [],
+    "risks": [],
+    "efficiency_metrics": [],
+    "execution_playbook": []
+  },
+  "scenarios_analysis": [],
+  "layout": [
+    {
+      "block_type": "metric_grid",
+      "title": "Analiza Kosztów Kontrahentów",
+      "subtitle": null,
+      "body": null,
+      "message": null,
+      "urgency": null,
+      "theme": null,
+      "chart_type": null,
+      "data": null,
+      "series_labels": null,
+      "metrics": [
+        {
+          "label": "Najwyższy koszt",
+          "value": "54 120.00 PLN",
+          "trend": null,
+          "trend_label": null,
+          "color": null
+        },
+        {
+          "label": "Kontrahent",
+          "value": "Jan Kowalski B2B",
+          "trend": null,
+          "trend_label": null,
+          "color": null
+        }
+      ],
+      "steps": null,
+      "columns": null,
+      "rows": null,
+      "items": null,
+      "carousel_items": null,
+      "score": null,
+      "label": null,
+      "risk_level": null,
+      "details": null,
+      "strengths": null,
+      "weaknesses": null,
+      "opportunities": null,
+      "threats": null,
+      "paths": null,
+      "payments": null
+    },
+    {
+      "block_type": "text_card",
+      "title": "Szczegóły",
+      "subtitle": null,
+      "body": "Zgodnie z analizą danych, kontrahent Jan Kowalski B2B jest odpowiedzialny za **54 120.00 PLN** łącznych kosztów, co stanowi najwyższą wartość wśród wszystkich kontrahentów.",
+      "message": null,
+      "urgency": null,
+      "theme": null,
+      "chart_type": null,
+      "data": null,
+      "series_labels": null,
+      "metrics": null,
+      "steps": null,
+      "columns": null,
+      "rows": null,
+      "items": null,
+      "carousel_items": null,
+      "score": null,
+      "label": null,
+      "risk_level": null,
+      "details": null,
+      "strengths": null,
+      "weaknesses": null,
+      "opportunities": null,
+      "threats": null,
+      "paths": null,
+      "payments": null
+    }
+  ],
+  "agent_timeline": [
+    {
+      "agent_name": "Instant Agent",
+      "timestamp": "2026-04-11T13:31:11.821097",
+      "step_type": "reasoning",
+      "content": "Szybkie wyszukiwanie danych (1 zapytań do narzędzi).",
+      "tool_name": null,
+      "tool_args": null
+    },
+    {
+      "agent_name": "System Triage",
+      "timestamp": "Faza Triage",
+      "step_type": "system",
+      "content": "Zapytanie CEO o kontrahenta generującego najwyższe koszty zostało przekazane do Major CFO.",
+      "tool_name": null,
+      "tool_args": null
+    },
+    {
+      "agent_name": "Major CFO",
+      "timestamp": "Faza Analizy Danych",
+      "step_type": "reasoning",
+      "content": "Zidentyfikowano potrzebę pobrania danych dotyczących kosztów generowanych przez poszczególnych kontrahentów w celu wskazania najwyższej wartości.",
+      "tool_name": null,
+      "tool_args": null
+    },
+    {
+      "agent_name": "Major CFO",
+      "timestamp": "Faza Zbierania Danych",
+      "step_type": "tool_call",
+      "content": "Wywołano narzędzie do agregacji danych finansowych, aby uzyskać sumaryczne koszty dla każdego kontrahenta.",
+      "tool_name": "Corporate Memory",
+      "tool_args": "SELECT contractor_name, SUM(amount) AS total_cost FROM expenses GROUP BY contractor_name ORDER BY total_cost DESC LIMIT 1"
+    },
+    {
+      "agent_name": "Major CFO",
+      "timestamp": "Faza Zbierania Danych",
+      "step_type": "tool_result",
+      "content": "Otrzymano wynik: Kontrahentem generującym najwyższe koszty jest Jan Kowalski B2B, z łączną kwotą 54120.00 PLN.",
+      "tool_name": null,
+      "tool_args": "Kontrahentem generującym najwyższe koszty jest Jan Kowalski B2B, z łączną kwotą 54120.00."
+    },
+    {
+      "agent_name": "Major CFO",
+      "timestamp": "Faza Generowania Odpowiedzi",
+      "step_type": "reasoning",
+      "content": "Na podstawie zebranych danych, przygotowano odpowiedź w formacie DashboardResponse, wykorzystując komponenty metric_grid do prezentacji kluczowych wartości oraz text_card dla kontekstu.",
+      "tool_name": null,
+      "tool_args": null
+    }
+  ]
+}
+
+----------------------------------------------------------------------
+[T-006] Lista kontrahentow z przychodami — PASS
+Prompt: Pokaz mi liste wszystkich kontrahentow przychodowych z kwotami.
+Route: instant | Response type: dashboard | Tool calls: 1 | Duration: 20.9s
+Blocks: ['metric_grid', 'data_table']
+--- FULL TEXT OUTPUT ---
+Poniżej przedstawiono zestawienie kontrahentów generujących przychody wraz z łącznymi kwotami. Całkowity przychód od tych kontrahentów wynosi **688 800 PLN**.
+Przedstawiono listę kontrahentów przychodowych wraz z łącznymi kwotami.
+Podsumowanie przychodów
+Lista kontrahentów przychodowych
+['FinBank S.A.', '393 600 PLN']
+['TechCorp Inc.', '166 050 PLN']
+['E-commerce Giant', '73 800 PLN']
+['Startup XYZ', '55 350 PLN']
+Kontrahent
+Kwota przychodu
+--- RAW REPORT JSON ---
+{
+  "response_type": "dashboard",
+  "hero_recommendation": "Przedstawiono listę kontrahentów przychodowych wraz z łącznymi kwotami.",
+  "executive_summary": "Poniżej przedstawiono zestawienie kontrahentów generujących przychody wraz z łącznymi kwotami. Całkowity przychód od tych kontrahentów wynosi **688 800 PLN**.",
+  "major_action_plan": {
+    "opportunities": [
+      "Identyfikacja kluczowych kontrahentów przychodowych."
+    ],
+    "risks": [
+      "Brak zidentyfikowanych ryzyk na podstawie samego zestawienia danych."
+    ],
+    "efficiency_metrics": [
+      "Brak metryk efektywności do obliczenia na podstawie samego zestawienia."
+    ],
+    "execution_playbook": [
+      {
+        "timeframe": "Bieżąco",
+        "action_title": "Monitorowanie przychodów od kontrahentów",
+        "description": "Regularne monitorowanie przychodów generowanych przez poszczególnych kontrahentów w celu identyfikacji trendów i anomalii.",
+        "owner": "Dział Finansowy"
+      }
+    ]
+  },
+  "scenarios_analysis": [
+    {
+      "name": "Scenariusz Bazowy",
+      "processed_raw_context": "Lista kontrahentów przychodowych i ich kwoty: FinBank S.A. (393600.00), TechCorp Inc. (166050.00), E-commerce Giant (73800.00), Startup XYZ (55350.00).",
+      "internal_analysis": "Analiza bieżących danych przychodowych od kontrahentów w celu przedstawienia ich w formie tabelarycznej. Założono stabilność przychodów w kolejnych miesiącach dla celów projekcji bazowej.",
+      "impact_description": "Przedstawienie aktualnego rozkładu przychodów według kontrahentów. Brak bezpośredniego wpływu na przyszłe wyniki finansowe, jedynie prezentacja danych historycznych.",
+      "risk_level": "Niskie",
+      "health_score": 80,
+      "chart_data": [
+        {
+          "month": "Bieżący",
+          "baseline_cashflow": 688800.0,
+          "simulated_cashflow": 688800.0,
+          "simulated_income": 688800.0,
+          "simulated_expenses": 0.0,
+          "math_reasoning": "Dane bieżące z raportu.",
+          "event_trigger": "Brak",
+          "confidence_score": 1.0
+        },
+        {
+          "month": "Miesiąc +1",
+          "baseline_cashflow": 688800.0,
+          "simulated_cashflow": 688800.0,
+          "simulated_income": 688800.0,
+          "simulated_expenses": 0.0,
+          "math_reasoning": "Projekcja bazowa zakłada utrzymanie bieżącego poziomu przychodów od kontrahentów.",
+          "event_trigger": "Brak",
+          "confidence_score": 0.9
+        },
+        {
+          "month": "Miesiąc +2",
+          "baseline_cashflow": 688800.0,
+          "simulated_cashflow": 688800.0,
+          "simulated_income": 688800.0,
+          "simulated_expenses": 0.0,
+          "math_reasoning": "Projekcja bazowa zakłada utrzymanie bieżącego poziomu przychodów od kontrahentów.",
+          "event_trigger": "Brak",
+          "confidence_score": 0.9
+        },
+        {
+          "month": "Miesiąc +3",
+          "baseline_cashflow": 688800.0,
+          "simulated_cashflow": 688800.0,
+          "simulated_income": 688800.0,
+          "simulated_expenses": 0.0,
+          "math_reasoning": "Projekcja bazowa zakłada utrzymanie bieżącego poziomu przychodów od kontrahentów.",
+          "event_trigger": "Brak",
+          "confidence_score": 0.9
+        },
+        {
+          "month": "Miesiąc +4",
+          "baseline_cashflow": 688800.0,
+          "simulated_cashflow": 688800.0,
+          "simulated_income": 688800.0,
+          "simulated_expenses": 0.0,
+          "math_reasoning": "Projekcja bazowa zakłada utrzymanie bieżącego poziomu przychodów od kontrahentów.",
+          "event_trigger": "Brak",
+          "confidence_score": 0.9
+        },
+        {
+          "month": "Miesiąc +5",
+          "baseline_cashflow": 688800.0,
+          "simulated_cashflow": 688800.0,
+          "simulated_income": 688800.0,
+          "simulated_expenses": 0.0,
+          "math_reasoning": "Projekcja bazowa zakłada utrzymanie bieżącego poziomu przychodów od kontrahentów.",
+          "event_trigger": "Brak",
+          "confidence_score": 0.9
+        }
+      ]
+    }
+  ],
+  "layout": [
+    {
+      "block_type": "metric_grid",
+      "title": "Podsumowanie przychodów",
+      "subtitle": null,
+      "body": null,
+      "message": null,
+      "urgency": null,
+      "theme": null,
+      "chart_type": null,
+      "data": null,
+      "series_labels": null,
+      "metrics": [
+        {
+          "label": "Całkowity przychód od kontrahentów",
+          "value": "688 800 PLN",
+          "trend": null,
+          "trend_label": null,
+          "color": null
+        }
+      ],
+      "steps": null,
+      "columns": null,
+      "rows": null,
+      "items": null,
+      "carousel_items": null,
+      "score": null,
+      "label": null,
+      "risk_level": null,
+      "details": null,
+      "strengths": null,
+      "weaknesses": null,
+      "opportunities": null,
+      "threats": null,
+      "paths": null,
+      "payments": null
+    },
+    {
+      "block_type": "data_table",
+      "title": "Lista kontrahen
+
+----------------------------------------------------------------------
+[T-007] Niezaplacone faktury — PASS
+Prompt: Pokaz tabele niezaplaconych faktur kosztowych posortowana od najwyzszej kwoty.
+Route: instant | Response type: dashboard | Tool calls: 1 | Duration: 41.9s
+Blocks: ['alert_banner', 'metric_grid', 'data_table', 'text_card']
+--- FULL TEXT OUTPUT ---
+Zidentyfikowano **16** niezapłaconych faktur kosztowych na łączną kwotę **216 640 PLN**. Największe zobowiązania dotyczą Urzędu Skarbowego i ZUS, z datą wystawienia **28.02.2026**. Wymagane jest natychmiastowe działanie w celu uregulowania tych płatności.
+Należy priorytetowo uregulować zobowiązania wobec Urzędu Skarbowego i ZUS, które stanowią łącznie **59 000 PLN** i są przeterminowane od **28.02.2026**.
+Podsumowanie niezapłaconych faktur kosztowych
+Niezapłacone faktury kosztowe (posortowane wg kwoty)
+['Urząd Skarbowy (VAT)', '34 000.00 PLN', '2026-02-28']
+['Jan Kowalski B2B', '27 060.00 PLN', '2026-02-28']
+['Zakład Ubezpieczeń Społecznych', '25 000.00 PLN', '2026-02-28']
+['Anna Nowak IT', '22 140.00 PLN', '2026-02-28']
+['Piotr Wiśniewski Dev', '19 680.00 PLN', '2026-02-28']
+['Agencja Marketingowa Krzak', '18 450.00 PLN', '2026-03-02']
+['AWS EMEA SARL', '17 835.00 PLN', '2026-03-03']
+['Sklep Komputerowy Sp. z o.o.', '14 760.00 PLN', '2026-03-06']
+['Wynajem Biura Sp. z o.o.', '14 760.00 PLN', '2026-03-01']
+['Szkolenia IT Master', '9 840.00 PLN', '2026-02-15']
+["Biuro Rachunkowe 'Liczydło'", '3 075.00 PLN', '2026-03-05']
+['Subskrypcja SaaS 13', '2 214.00 PLN', '2026-03-02']
+['Subskrypcja SaaS 12', '2 091.00 PLN', '2026-03-02']
+['Subskrypcja SaaS 11', '1 968.00 PLN', '2026-03-02']
+['Subskrypcja SaaS 10', '1 845.00 PLN', '2026-03-02']
+['Subskrypcja SaaS 9', '1 722.00 PLN', '2026-03-02']
+Kontrahent
+Kwota Brutto
+Data Wystawienia
+Największe zobowiązania dotyczą Urzędu Skarbowego (**34 000 PLN**) i Zakładu Ubezpieczeń Społecznych (**25 000 PLN**), z datą wystawienia **28.02.2026**. Te płatności są krytyczne i wymagają natychmiastowego uregulowania. Kolejne znaczące kwoty to faktury od kontrahentów B2B, takich jak Jan Kowalski (**27 060 PLN**), Anna Nowak IT (**22 140 PLN**) i Piotr Wiśniewski Dev (**19 680 PLN**). Rekomenduje się kontakt z tymi kontrahentami w celu ustalenia harmonogramu płatności.
+Analiza płatności
+--- RAW REPORT JSON ---
+{
+  "response_type": "dashboard",
+  "hero_recommendation": "Należy priorytetowo uregulować zobowiązania wobec Urzędu Skarbowego i ZUS, które stanowią łącznie **59 000 PLN** i są przeterminowane od **28.02.2026**.",
+  "executive_summary": "Zidentyfikowano **16** niezapłaconych faktur kosztowych na łączną kwotę **216 640 PLN**. Największe zobowiązania dotyczą Urzędu Skarbowego i ZUS, z datą wystawienia **28.02.2026**. Wymagane jest natychmiastowe działanie w celu uregulowania tych płatności.",
+  "major_action_plan": {
+    "opportunities": [
+      "Optymalizacja płatności SaaS poprzez renegocjacje lub konsolidację subskrypcji.",
+      "Weryfikacja terminów płatności z kontrahentami B2B w celu poprawy płynności."
+    ],
+    "risks": [
+      "Ryzyko naliczenia odsetek i kar za opóźnienia w płatnościach publicznoprawnych (VAT, ZUS).",
+      "Pogorszenie relacji z kluczowymi dostawcami (np. Jan Kowalski B2B, Anna Nowak IT) z powodu opóźnień.",
+      "Potencjalne przerwy w świadczeniu usług (np. AWS) w przypadku braku płatności."
+    ],
+    "efficiency_metrics": [
+      "Redukcja przeterminowanych zobowiązań o **50%** w ciągu najbliższych **7 dni**.",
+      "Zmniejszenie średniego czasu płatności faktur kosztowych o **10 dni** w kolejnym kwartale."
+    ],
+    "execution_playbook": [
+      {
+        "timeframe": "Natychmiast",
+        "action_title": "Uregulowanie zobowiązań publicznoprawnych",
+        "description": "Opłać faktury dla Urzędu Skarbowego (**34 000 PLN**) i ZUS (**25 000 PLN**).",
+        "owner": "Dział Finansowy"
+      },
+      {
+        "timeframe": "Do 3 dni",
+        "action_title": "Kontakt z kluczowymi kontrahentami B2B",
+        "description": "Skontaktuj się z Janem Kowalskim B2B (**27 060 PLN**), Anną Nowak IT (**22 140 PLN**) i Piotrem Wiśniewskim Dev (**19 680 PLN**) w celu ustalenia harmonogramu płatności lub renegocjacji terminów.",
+        "owner": "Dział Finansowy / Zarząd"
+      },
+      {
+        "timeframe": "Do 5 dni",
+        "action_title": "Analiza i planowanie płatności pozostałych faktur",
+        "description": "Przeanalizuj pozostałe faktury, w tym Agencja Marketingowa Krzak (**18 450 PLN**), AWS EMEA SARL (**17 835 PLN**) i Wynajem Biura Sp. z o.o. (**14 760 PLN**), aby ustalić kolejność i możliwość płatności.",
+        "owner": "Dział Finansowy"
+      },
+      {
+        "timeframe": "Ciągle",
+        "action_title": "Monitorowanie płynności i cashflow",
+        "description": "Wprowadź codzienne monitorowanie stanu gotówki i prognoz cashflow, aby zapobiegać przyszłym opóźnieniom.",
+        "owner": "Dział Finansowy"
+      }
+    ]
+  },
+  "scenarios_analysis": [
+    {
+      "name": "Scenariusz A: Natychmiastowa płatność krytycznych zobowiązań",
+      "processed_raw_context": "Zobowiązania: Urząd Skarbowy (VAT) **34 000 PLN**, ZUS **25 000 PLN**. Data wystawienia: **2026-02-28**. Całkowite niezapłacone faktury: **216 640 PLN**.",
+      "internal_analysis": "Zakłada się, że firma posiada wystarczające środki na pokrycie najbardziej pilnych zobowiązań publicznoprawnych. Płatność tych faktur zmniejszy ryzyko kar i odsetek, ale obniży dostępną gotówkę.",
+      "impact_description": "Uregulowanie kluczowych zobowiązań publicznoprawnych poprawi zgodność regulacyjną i zmniejszy ryzyko finansowe, ale znacząco obniży bieżącą płynność.",
+      "risk_level": "Niskie",
+      "health_score": 85,
+      "chart_data": [
+        {
+          "month": "Marzec",
+          "baseline_cashflow": 0.0,
+          "simulated_cashflow": -59000.0,
+          "simulated_income": 0.0,
+          "simulated_expenses": 59000.0,
+          "math_reasoning": "Płatność VAT i ZUS: 34000 + 25000 = 59000 PLN. Cashflow zmniejsza się o 59000 PLN.",
+          "event_trigger": "Płatność VAT i ZUS",
+          "confidence_score": 0.98
+        },
+        {
+          "month": "Kwiecień",
+          "baseline_cashflow": 0.0,
+          "simulated_cashflow": -59000.0,
+          "simulated_income": 0.0,
+          "simulated_expenses": 0.0,
+          "math_reasoning": "Brak dodatkowych płatności w tym scenariuszu. Cashflow pozostaje na poziomie z poprzedniego miesiąca.",
+          "event_trigger": "Brak",
+          "confidence_score": 0.95
+        },
+        {
+          "month": "Maj",
+          "baseline_cashflow": 0.0,
+          "simulated_cashflow": -59000.0,
+          "simulated_income": 0.0,
+          "simulated_expenses": 0.0,
+          "math_reasoning": "Brak dodatkowych płatności w tym scenariuszu. Cashflow pozostaje na poziomie z poprzedniego miesiąca.",
+          "event_trigger": "Brak",
+          "confidence_score": 0.95
+        },
+        {
+          "month": "Czerwiec",
+          "baseline_cashflow": 0.0,
+          "simulated_cashflow": -59000.0,
+          "simulated_income": 0.0,
+          "simulated_expenses": 0.0,
+          "math_reasoning": "Brak dodatkowych płatności w tym scenariuszu. Cashflow pozostaje na poziomie z poprzedniego miesiąca.",
+          "event_trigger": "Brak",
+          "confidence_score": 0.95
+ 
+
+----------------------------------------------------------------------
+[T-008] Struktura kosztow — PASS
+Prompt: Jaka jest struktura moich kosztow? Pokaz rozklad po kontrahentach.
+Route: analysis | Response type: dashboard | Tool calls: 1 | Duration: 61.1s
+Blocks: ['metric_grid', 'chart', 'data_table', 'text_card']
+--- FULL TEXT OUTPUT ---
+Struktura kosztów opiera się na trzech głównych filarach: kontraktach B2B, podatkach/składkach oraz infrastrukturze. Łączna suma analizowanych kosztów netto wynosi 320 600 PLN. Zidentyfikowano rozproszone koszty 13 subskrypcji SaaS na kwotę 15 600 PLN netto, co stanowi potencjał do natychmiastowej optymalizacji.
+Główne ośrodki kosztowe to współpracownicy B2B (**112 000 PLN** netto) oraz zobowiązania publicznoprawne (**84 000 PLN**). Rekomenduję audyt subskrypcji SaaS oraz renegocjację kosztów infrastruktury AWS.
+Rozkład kosztów netto po kontrahentach (Top 5)
+ZUS
+50000.0
+None
+None
+Jan Kowalski B2B
+44000.0
+None
+None
+Wynajem Biura Sp. z o.o.
+36000.0
+None
+None
+Anna Nowak IT
+36000.0
+None
+None
+Urząd Skarbowy (VAT)
+34000.0
+None
+None
+Szczegółowe zestawienie kosztów
+['Zakład Ubezpieczeń Społecznych', '50 000,00', '50 000,00', '2']
+['Jan Kowalski B2B', '44 000,00', '54 120,00', '2']
+['Wynajem Biura Sp. z o.o.', '36 000,00', '44 280,00', '3']
+['Anna Nowak IT', '36 000,00', '44 280,00', '2']
+['Urząd Skarbowy (VAT)', '34 000,00', '34 000,00', '1']
+['Piotr Wiśniewski Dev', '32 000,00', '39 360,00', '2']
+['AWS EMEA SARL', '30 500,00', '37 515,00', '3']
+['Subskrypcje SaaS (1-13)', '15 600,00', '19 188,00', '13']
+['Agencja Marketingowa Krzak', '15 000,00', '18 450,00', '1']
+['Sklep Komputerowy Sp. z o.o.', '12 000,00', '14 760,00', '1']
+['Szkolenia IT Master', '8 000,00', '9 840,00', '1']
+['Biuro Rachunkowe "Liczydło"', '7 500,00', '9 225,00', '3']
+Kontrahent
+Kwota Netto (PLN)
+Kwota Brutto (PLN)
+Liczba faktur
+Zidentyfikowano **13** różnych subskrypcji SaaS na łączną kwotę **15 600 PLN** netto. Przeprowadź audyt wykorzystania tych narzędzi. Skontaktuj się z AWS w celu optymalizacji kosztów serwerów, które obecnie wynoszą **30 500 PLN** netto.
+Rekomendacja
+--- RAW REPORT JSON ---
+{
+  "response_type": "dashboard",
+  "hero_recommendation": "Główne ośrodki kosztowe to współpracownicy B2B (**112 000 PLN** netto) oraz zobowiązania publicznoprawne (**84 000 PLN**). Rekomenduję audyt subskrypcji SaaS oraz renegocjację kosztów infrastruktury AWS.",
+  "executive_summary": "Struktura kosztów opiera się na trzech głównych filarach: kontraktach B2B, podatkach/składkach oraz infrastrukturze. Łączna suma analizowanych kosztów netto wynosi 320 600 PLN. Zidentyfikowano rozproszone koszty 13 subskrypcji SaaS na kwotę 15 600 PLN netto, co stanowi potencjał do natychmiastowej optymalizacji.",
+  "major_action_plan": {
+    "opportunities": [
+      "Konsolidacja lub redukcja 13 subskrypcji SaaS (potencjał oszczędności do 5 000 PLN/mies.)",
+      "Przejście na plany roczne lub rezerwacja instancji w AWS (potencjał redukcji kosztów o 20-30%)"
+    ],
+    "risks": [
+      "Wysoki udział kosztów stałych (biuro, stałe kontrakty B2B) ogranicza elastyczność w przypadku spadku przychodów",
+      "Znaczne obciążenie z tytułu VAT i ZUS wymaga rygorystycznego zarządzania płynnością"
+    ],
+    "efficiency_metrics": [
+      "Udział kosztów B2B w strukturze: 35%",
+      "Udział zobowiązań publicznoprawnych: 26%",
+      "Udział kosztów infrastruktury i biura: 21%"
+    ],
+    "execution_playbook": [
+      {
+        "timeframe": "Tydzień 1",
+        "action_title": "Audyt subskrypcji SaaS",
+        "description": "Wykonaj przegląd 13 aktywnych subskrypcji SaaS. Anuluj nieużywane licencje i zredukuj pakiety do niezbędnego minimum.",
+        "owner": "Dział IT / Administracja"
+      },
+      {
+        "timeframe": "Tydzień 2",
+        "action_title": "Optymalizacja AWS",
+        "description": "Skontaktuj się z opiekunem AWS w celu analizy wykorzystania zasobów i wdrożenia Reserved Instances lub Savings Plans.",
+        "owner": "Dział IT"
+      }
+    ]
+  },
+  "scenarios_analysis": [
+    {
+      "name": "Scenariusz A: Optymalizacja bazy kosztowej",
+      "processed_raw_context": "Zidentyfikowano koszty: ZUS (50k), B2B (112k), Biuro (36k), US (34k), AWS (30.5k), Marketing (15k), Sprzęt (12k), Szkolenia (8k), Księgowość (7.5k), SaaS (15.6k).",
+      "internal_analysis": "Obecna struktura kosztów wykazuje wysoki poziom wydatków stałych. Wdrożenie optymalizacji w obszarze AWS (redukcja o 20%) oraz SaaS (redukcja o 30%) obniży miesięczny burn rate o około 10 000 PLN netto, poprawiając płynność bez wpływu na operacje.",
+      "impact_description": "Zmniejszenie miesięcznych wypływów gotówkowych i poprawa wskaźnika rentowności netto.",
+      "risk_level": "Niskie",
+      "health_score": 85,
+      "chart_data": [
+        {
+          "month": "Miesiąc 1",
+          "baseline_cashflow": 100000.0,
+          "simulated_cashflow": 100000.0,
+          "simulated_income": 400000.0,
+          "simulated_expenses": 320600.0,
+          "math_reasoning": "Koszty bazowe 320.6k, przychody 400k.",
+          "event_trigger": "Rozpoczęcie audytu kosztów",
+          "confidence_score": 0.95
+        },
+        {
+          "month": "Miesiąc 2",
+          "baseline_cashflow": 179400.0,
+          "simulated_cashflow": 184400.0,
+          "simulated_income": 400000.0,
+          "simulated_expenses": 315600.0,
+          "math_reasoning": "Redukcja kosztów SaaS o 5k.",
+          "event_trigger": "Anulowanie zbędnych subskrypcji",
+          "confidence_score": 0.9
+        },
+        {
+          "month": "Miesiąc 3",
+          "baseline_cashflow": 258800.0,
+          "simulated_cashflow": 274400.0,
+          "simulated_income": 400000.0,
+          "simulated_expenses": 310000.0,
+          "math_reasoning": "Dodatkowa redukcja kosztów AWS o 5.6k.",
+          "event_trigger": "Wdrożenie AWS Savings Plans",
+          "confidence_score": 0.85
+        },
+        {
+          "month": "Miesiąc 4",
+          "baseline_cashflow": 338200.0,
+          "simulated_cashflow": 364400.0,
+          "simulated_income": 400000.0,
+          "simulated_expenses": 310000.0,
+          "math_reasoning": "Utrzymanie zoptymalizowanych kosztów.",
+          "event_trigger": "Brak",
+          "confidence_score": 0.85
+        },
+        {
+          "month": "Miesiąc 5",
+          "baseline_cashflow": 417600.0,
+          "simulated_cashflow": 454400.0,
+          "simulated_income": 400000.0,
+          "simulated_expenses": 310000.0,
+          "math_reasoning": "Utrzymanie zoptymalizowanych kosztów.",
+          "event_trigger": "Brak",
+          "confidence_score": 0.8
+        },
+        {
+          "month": "Miesiąc 6",
+          "baseline_cashflow": 497000.0,
+          "simulated_cashflow": 544400.0,
+          "simulated_income": 400000.0,
+          "simulated_expenses": 310000.0,
+          "math_reasoning": "Utrzymanie zoptymalizowanych kosztów.",
+          "event_trigger": "Brak",
+          "confidence_score": 0.8
+        }
+      ]
+    }
+  ],
+  "layout": [
+    {
+      "block_type": "metric_grid",
+      "title": null,
+      "subtitle": null,
+      "body": null,
+      "message": null,
+
+
+----------------------------------------------------------------------
+[T-011] Analiza cashflow — PASS
+Prompt: Przeanalizuj moj cashflow za ostatnie 3 miesiace. Jak wyglada trend?
+Route: analysis | Response type: dashboard | Tool calls: 4 | Duration: 121.5s
+Blocks: ['alert_banner', 'metric_grid', 'chart', 'text_card']
+--- FULL TEXT OUTPUT ---
+Spółka wykazuje wysoką rentowność księgową, jednak rzeczywisty cashflow drastycznie spada z powodu rosnących zatorów płatniczych. W lutym i marcu wygenerowano 325 000 PLN nieopłaconych należności, co wymusiło wstrzymanie płatności własnych zobowiązań na kwotę 187 000 PLN. Obecna rezerwa gotówkowa wynosi 840 000 PLN, co zapewnia płynność, ale planowany wzrost kosztów o 40 000 PLN w kwietniu wymaga natychmiastowego skrócenia wskaźnika DSO.
+Rozpocznij natychmiastową windykację należności od FinBank (120 000 PLN) oraz ureguluj krytyczne zobowiązania, aby zapobiec dalszemu wzrostowi zatorów płatniczych.
+Zysk księgowy vs Rzeczywisty Cashflow (Q1 2026)
+Firma wykazuje stabilną rentowność księgową. Zysk netto wyniósł **58 500 PLN** w styczniu, **99 900 PLN** w lutym oraz **81 000 PLN** w marcu. Rzeczywiste wpływy gotówkowe wykazują trend spadkowy. W styczniu cashflow wyniósł **58 500 PLN**. W lutym spadł do **42 900 PLN** z powodu braku zapłaty za faktury na kwotę **180 000 PLN**. W marcu rzeczywisty cashflow wyniósł **0 PLN**. Brak wpływów wymusił wstrzymanie płatności własnych zobowiązań na łączną kwotę **187 000 PLN**.
+Analiza trendu cashflow
+--- RAW REPORT JSON ---
+{
+  "response_type": "dashboard",
+  "hero_recommendation": "Rozpocznij natychmiastową windykację należności od FinBank (120 000 PLN) oraz ureguluj krytyczne zobowiązania, aby zapobiec dalszemu wzrostowi zatorów płatniczych.",
+  "executive_summary": "Spółka wykazuje wysoką rentowność księgową, jednak rzeczywisty cashflow drastycznie spada z powodu rosnących zatorów płatniczych. W lutym i marcu wygenerowano 325 000 PLN nieopłaconych należności, co wymusiło wstrzymanie płatności własnych zobowiązań na kwotę 187 000 PLN. Obecna rezerwa gotówkowa wynosi 840 000 PLN, co zapewnia płynność, ale planowany wzrost kosztów o 40 000 PLN w kwietniu wymaga natychmiastowego skrócenia wskaźnika DSO.",
+  "major_action_plan": {
+    "opportunities": [
+      "Odblokowanie 325 000 PLN z zamrożonych należności.",
+      "Poprawa wskaźnika DSO poprzez wdrożenie rygorystycznego procesu windykacji."
+    ],
+    "risks": [
+      "Utrata płynności w nadchodzących miesiącach przy jednoczesnym wzroście kosztów operacyjnych o 40 000 PLN/mies.",
+      "Ryzyko utraty reputacji u dostawców z powodu 187 000 PLN przeterminowanych zobowiązań."
+    ],
+    "efficiency_metrics": [
+      "Odzyskanie 120 000 PLN od FinBank w ciągu 7 dni.",
+      "Redukcja przeterminowanych zobowiązań o 100% do końca miesiąca."
+    ],
+    "execution_playbook": [
+      {
+        "timeframe": "Tydzień 1",
+        "action_title": "Windykacja FinBank",
+        "description": "Skontaktuj się z działem księgowości FinBank w celu natychmiastowego uregulowania faktury na 120 000 PLN.",
+        "owner": "Dział Finansów"
+      },
+      {
+        "timeframe": "Tydzień 1-2",
+        "action_title": "Spłata zobowiązań",
+        "description": "Opłać zaległe faktury kosztowe za luty i marzec (187 000 PLN) wykorzystując rezerwę gotówkową.",
+        "owner": "Zarząd"
+      },
+      {
+        "timeframe": "Tydzień 3",
+        "action_title": "Wdrożenie procedury DSO",
+        "description": "Zautomatyzuj przypomnienia o płatnościach dla wszystkich faktur przeterminowanych o 3 dni.",
+        "owner": "Dział IT / Księgowość"
+      }
+    ]
+  },
+  "scenarios_analysis": [
+    {
+      "name": "Scenariusz A",
+      "processed_raw_context": "Gotówka: 840 000 PLN. Należności: 325 000 PLN. Zobowiązania: 187 000 PLN. Wzrost kosztów: 40 000 PLN/mies.",
+      "internal_analysis": "Brak skutecznej windykacji przy jednoczesnym wzroście kosztów operacyjnych doprowadzi do systematycznego spalania rezerwy gotówkowej.",
+      "impact_description": "Spadek rezerwy gotówkowej, rosnące zadłużenie u dostawców.",
+      "risk_level": "Wysokie",
+      "health_score": 60,
+      "chart_data": [
+        {
+          "month": "Kwiecień 2026",
+          "baseline_cashflow": 840000.0,
+          "simulated_cashflow": 800000.0,
+          "simulated_income": 150000.0,
+          "simulated_expenses": 190000.0,
+          "math_reasoning": "840000 + 150000 - 190000 = 800000",
+          "event_trigger": "Wzrost kosztów operacyjnych",
+          "confidence_score": 0.9
+        },
+        {
+          "month": "Maj 2026",
+          "baseline_cashflow": 800000.0,
+          "simulated_cashflow": 760000.0,
+          "simulated_income": 150000.0,
+          "simulated_expenses": 190000.0,
+          "math_reasoning": "800000 + 150000 - 190000 = 760000",
+          "event_trigger": "Brak spłat należności",
+          "confidence_score": 0.85
+        },
+        {
+          "month": "Czerwiec 2026",
+          "baseline_cashflow": 760000.0,
+          "simulated_cashflow": 720000.0,
+          "simulated_income": 150000.0,
+          "simulated_expenses": 190000.0,
+          "math_reasoning": "760000 + 150000 - 190000 = 720000",
+          "event_trigger": "Brak spłat należności",
+          "confidence_score": 0.8
+        },
+        {
+          "month": "Lipiec 2026",
+          "baseline_cashflow": 720000.0,
+          "simulated_cashflow": 680000.0,
+          "simulated_income": 150000.0,
+          "simulated_expenses": 190000.0,
+          "math_reasoning": "720000 + 150000 - 190000 = 680000",
+          "event_trigger": "Brak spłat należności",
+          "confidence_score": 0.75
+        },
+        {
+          "month": "Sierpień 2026",
+          "baseline_cashflow": 680000.0,
+          "simulated_cashflow": 640000.0,
+          "simulated_income": 150000.0,
+          "simulated_expenses": 190000.0,
+          "math_reasoning": "680000 + 150000 - 190000 = 640000",
+          "event_trigger": "Brak spłat należności",
+          "confidence_score": 0.7
+        },
+        {
+          "month": "Wrzesień 2026",
+          "baseline_cashflow": 640000.0,
+          "simulated_cashflow": 600000.0,
+          "simulated_income": 150000.0,
+          "simulated_expenses": 190000.0,
+          "math_reasoning": "640000 + 150000 - 190000 = 600000",
+          "event_trigger": "Brak spłat należności",
+          "confidence_score": 0.65
+        }
+      ]
+    },
+    {
+      "name": "Scenariusz B",
+      "processed_raw_context": "Gotówka: 840 000 PLN. Należności: 325 000
+
+----------------------------------------------------------------------
+[T-012] Ryzyko koncentracji klientow — PASS
+Prompt: Czy mam ryzyko koncentracji klientow? Jaki procent przychodow pochodzi od jednego kontrahenta?
+Route: analysis | Response type: dashboard | Tool calls: 2 | Duration: 75.8s
+Blocks: ['alert_banner', 'metric_grid', 'chart', 'data_table', 'text_card']
+--- FULL TEXT OUTPUT ---
+Całkowite przychody wynoszą 560 000 PLN. FinBank S.A. generuje 320 000 PLN, co stanowi 57,14% udziału w strukturze sprzedaży. Kontrahent ten posiada zatory płatnicze na kwotę 120 000 PLN za luty, co bezpośrednio obciąża płynność i wydłuża cykl rotacji należności (DSO).
+Zidentyfikowano wysokie ryzyko koncentracji. Główny klient odpowiada za 57,14% przychodów i posiada przeterminowane zadłużenie na kwotę 120 000 PLN.
+Struktura przychodów według kontrahentów
+FinBank S.A.
+320000.0
+None
+None
+TechCorp Inc.
+135000.0
+None
+None
+E-commerce Giant
+60000.0
+None
+None
+Startup XYZ
+45000.0
+None
+None
+Zestawienie przychodów
+['FinBank S.A.', '320 000', '57,14']
+['TechCorp Inc.', '135 000', '24,11']
+['E-commerce Giant', '60 000', '10,71']
+['Startup XYZ', '45 000', '8,04']
+Kontrahent
+Przychód (PLN)
+Udział (%)
+Rozpocznij natychmiastową windykację kwoty **120 000 PLN** od FinBank S.A. Wdróż strategię pozyskiwania nowych klientów, aby obniżyć udział głównego kontrahenta poniżej **40%**.
+Rekomendacja
+--- RAW REPORT JSON ---
+{
+  "response_type": "dashboard",
+  "hero_recommendation": "Zidentyfikowano wysokie ryzyko koncentracji. Główny klient odpowiada za 57,14% przychodów i posiada przeterminowane zadłużenie na kwotę 120 000 PLN.",
+  "executive_summary": "Całkowite przychody wynoszą 560 000 PLN. FinBank S.A. generuje 320 000 PLN, co stanowi 57,14% udziału w strukturze sprzedaży. Kontrahent ten posiada zatory płatnicze na kwotę 120 000 PLN za luty, co bezpośrednio obciąża płynność i wydłuża cykl rotacji należności (DSO).",
+  "major_action_plan": {
+    "opportunities": [
+      "Dywersyfikacja portfela klientów poprzez akwizycję w nowych segmentach",
+      "Skrócenie cyklu rotacji należności (DSO) poprzez twardszą politykę windykacyjną"
+    ],
+    "risks": [
+      "Utrata płynności finansowej w przypadku całkowitej niewypłacalności FinBank S.A.",
+      "Dalsze opóźnienia w spłacie bieżących faktur przez głównego klienta"
+    ],
+    "efficiency_metrics": [
+      "Zmniejszenie udziału głównego klienta poniżej 40% w perspektywie 6 miesięcy",
+      "Odzyskanie 120 000 PLN przeterminowanych należności w ciągu 14 dni"
+    ],
+    "execution_playbook": [
+      {
+        "timeframe": "Tydzień 1",
+        "action_title": "Windykacja należności",
+        "description": "Rozpocznij formalny proces windykacji kwoty 120 000 PLN od FinBank S.A. Wyślij ostateczne wezwanie do zapłaty.",
+        "owner": "Dział Finansów"
+      },
+      {
+        "timeframe": "Tydzień 2-4",
+        "action_title": "Rewizja warunków handlowych",
+        "description": "Wstrzymaj świadczenie usług dla FinBank S.A. do momentu uregulowania zaległości. Wprowadź przedpłaty dla nowych zamówień.",
+        "owner": "Zarząd"
+      },
+      {
+        "timeframe": "Miesiąc 2-3",
+        "action_title": "Dywersyfikacja sprzedaży",
+        "description": "Zwiększ nakłady na pozyskanie klientów z innych sektorów, aby zrównoważyć strukturę przychodów.",
+        "owner": "Dział Sprzedaży"
+      }
+    ]
+  },
+  "scenarios_analysis": [
+    {
+      "name": "Scenariusz A",
+      "processed_raw_context": "FinBank S.A.: 320 000 PLN przychodu, 57,14% udziału, 120 000 PLN zaległości za luty.",
+      "internal_analysis": "Brak spłaty 120 000 PLN przy tak dużej koncentracji drastycznie obniża dostępne saldo gotówkowe i uniemożliwia pokrycie bieżących zobowiązań.",
+      "impact_description": "Spadek płynności, wzrost DSO, ryzyko niewypłacalności.",
+      "risk_level": "Krytyczne",
+      "health_score": 30,
+      "chart_data": [
+        {
+          "month": "Marzec",
+          "baseline_cashflow": 150000.0,
+          "simulated_cashflow": 30000.0,
+          "simulated_income": 40000.0,
+          "simulated_expenses": 160000.0,
+          "math_reasoning": "150000 - 120000 (brak wpływu) = 30000",
+          "event_trigger": "Brak spłaty zaległości przez FinBank S.A.",
+          "confidence_score": 0.9
+        },
+        {
+          "month": "Kwiecień",
+          "baseline_cashflow": 160000.0,
+          "simulated_cashflow": -10000.0,
+          "simulated_income": 40000.0,
+          "simulated_expenses": 80000.0,
+          "math_reasoning": "30000 + 40000 - 80000 = -10000",
+          "event_trigger": "Utrata płynności",
+          "confidence_score": 0.85
+        },
+        {
+          "month": "Maj",
+          "baseline_cashflow": 170000.0,
+          "simulated_cashflow": -50000.0,
+          "simulated_income": 40000.0,
+          "simulated_expenses": 80000.0,
+          "math_reasoning": "-10000 + 40000 - 80000 = -50000",
+          "event_trigger": "Brak środków na wynagrodzenia",
+          "confidence_score": 0.8
+        },
+        {
+          "month": "Czerwiec",
+          "baseline_cashflow": 180000.0,
+          "simulated_cashflow": -90000.0,
+          "simulated_income": 40000.0,
+          "simulated_expenses": 80000.0,
+          "math_reasoning": "-50000 + 40000 - 80000 = -90000",
+          "event_trigger": "Zatory płatnicze wobec dostawców",
+          "confidence_score": 0.75
+        },
+        {
+          "month": "Lipiec",
+          "baseline_cashflow": 190000.0,
+          "simulated_cashflow": -130000.0,
+          "simulated_income": 40000.0,
+          "simulated_expenses": 80000.0,
+          "math_reasoning": "-90000 + 40000 - 80000 = -130000",
+          "event_trigger": "Niewypłacalność",
+          "confidence_score": 0.7
+        },
+        {
+          "month": "Sierpień",
+          "baseline_cashflow": 200000.0,
+          "simulated_cashflow": -170000.0,
+          "simulated_income": 40000.0,
+          "simulated_expenses": 80000.0,
+          "math_reasoning": "-130000 + 40000 - 80000 = -170000",
+          "event_trigger": "Upadłość",
+          "confidence_score": 0.65
+        }
+      ]
+    },
+    {
+      "name": "Scenariusz B",
+      "processed_raw_context": "FinBank S.A.: 120 000 PLN zaległości.",
+      "internal_analysis": "Szybkie odzyskanie należności stabilizuje cashflow, ale nie rozwiązuje problemu koncentracji w długim terminie.",
+      "impact_description": "Poprawa płynności 
+
+----------------------------------------------------------------------
+[T-013] Analiza naleznosci — PASS
+Prompt: Przeanalizuj moje naleznosci. Ile jest przeterminowanych i jaki to wplyw na plynnosc?
+Route: analysis | Response type: dashboard | Tool calls: 5 | Duration: 104.6s
+Blocks: ['alert_banner', 'metric_grid', 'text_card', 'data_table']
+--- FULL TEXT OUTPUT ---
+W systemie widnieją 4 nieopłacone faktury przychodowe na łączną kwotę 399 750 PLN brutto. Głównym dłużnikiem jest FinBank S.A. (270 600 PLN brutto). Zamrożone środki stanowią 2.7x miesięcznego MRR. Przy obecnym wskaźniku burn rate na poziomie 35 000 PLN/mies. oraz planowanym wzroście kosztów operacyjnych o 40 000 PLN/mies., brak tych wpływów znacząco redukuje runway. Zidentyfikowano ryzyko utraty płynności w kwietniu oraz potencjalne ryzyka podatkowe w obszarze VAT.
+Należności w kwocie 399 750 PLN brutto pozostają nieopłacone. Uruchom procedurę windykacyjną wobec FinBank S.A. oraz E-commerce Giant, aby zabezpieczyć płynność na kwiecień.
+Zablokowane środki stanowią 2.7x miesięcznego MRR. Przy obecnym wskaźniku burn rate na poziomie 35 000 PLN/mies. oraz planowanym wzroście kosztów operacyjnych o 40 000 PLN/mies., brak wpływów z należności znacząco redukuje runway. Dodatkowo zidentyfikowano ryzyka podatkowe w obszarze VAT dla przeterminowanych dokumentów.
+Wpływ na płynność finansową
+Struktura przeterminowanych należności
+['FinBank S.A.', '270 600 PLN', '05.02.2024 / 05.03.2024', 'Krytyczny']
+['E-commerce Giant', '73 800 PLN', '20.02.2024', 'Opóźniona']
+['TechCorp Inc.', '55 350 PLN', '05.03.2024', 'Opóźniona']
+Kontrahent
+Kwota brutto
+Data wystawienia
+Status
+--- RAW REPORT JSON ---
+{
+  "response_type": "dashboard",
+  "hero_recommendation": "Należności w kwocie 399 750 PLN brutto pozostają nieopłacone. Uruchom procedurę windykacyjną wobec FinBank S.A. oraz E-commerce Giant, aby zabezpieczyć płynność na kwiecień.",
+  "executive_summary": "W systemie widnieją 4 nieopłacone faktury przychodowe na łączną kwotę 399 750 PLN brutto. Głównym dłużnikiem jest FinBank S.A. (270 600 PLN brutto). Zamrożone środki stanowią 2.7x miesięcznego MRR. Przy obecnym wskaźniku burn rate na poziomie 35 000 PLN/mies. oraz planowanym wzroście kosztów operacyjnych o 40 000 PLN/mies., brak tych wpływów znacząco redukuje runway. Zidentyfikowano ryzyko utraty płynności w kwietniu oraz potencjalne ryzyka podatkowe w obszarze VAT.",
+  "major_action_plan": {
+    "opportunities": [
+      "Redukcja wskaźnika DSO o 15% po odzyskaniu należności",
+      "Uwolnienie 399 750 PLN gotówki na pokrycie rosnących kosztów operacyjnych"
+    ],
+    "risks": [
+      "Utrata płynności finansowej w kwietniu",
+      "Ryzyko podatkowe związane z brakiem możliwości odliczenia VAT",
+      "Dalsze opóźnienia w płatnościach ze strony FinBank S.A."
+    ],
+    "efficiency_metrics": [
+      "Odzyskanie 270 600 PLN od FinBank S.A. w ciągu 7 dni",
+      "Zabezpieczenie runway na kolejne 11 miesięcy"
+    ],
+    "execution_playbook": [
+      {
+        "timeframe": "Tydzień 1",
+        "action_title": "Windykacja FinBank S.A.",
+        "description": "Zleć wezwanie do zapłaty dla faktur z 5 lutego i 5 marca na kwotę 270 600 PLN brutto.",
+        "owner": "Dział Prawny"
+      },
+      {
+        "timeframe": "Tydzień 1",
+        "action_title": "Windykacja E-commerce Giant",
+        "description": "Skontaktuj się z E-commerce Giant w sprawie opóźnionej faktury z 20 lutego na 73 800 PLN brutto.",
+        "owner": "Finanse"
+      },
+      {
+        "timeframe": "Tydzień 2",
+        "action_title": "Audyt ryzyka VAT",
+        "description": "Zweryfikuj status nieopłaconych faktur pod kątem ulgi na złe długi i odliczeń VAT.",
+        "owner": "Księgowość"
+      },
+      {
+        "timeframe": "Tydzień 3",
+        "action_title": "Renegocjacja umów",
+        "description": "Wprowadź krótsze terminy płatności lub wymóg zaliczki dla FinBank S.A. i E-commerce Giant.",
+        "owner": "Zarząd"
+      }
+    ]
+  },
+  "scenarios_analysis": [
+    {
+      "name": "Scenariusz A",
+      "processed_raw_context": "Należności: 399 750 PLN. Gotówka: 840 000 PLN. Burn rate: 35 000 PLN. Wzrost OPEX: 40 000 PLN. MRR: 145 000 PLN.",
+      "internal_analysis": "Pełne odzyskanie należności w ciągu 14 dni. Środki zasilają konto, kompensując planowany wzrost kosztów operacyjnych. Wskaźnik DSO ulega poprawie.",
+      "impact_description": "Zabezpieczenie płynności finansowej na Q2 i Q3. Bezpieczna realizacja planu wzrostu kosztów.",
+      "risk_level": "Niskie",
+      "health_score": 90,
+      "chart_data": [
+        {
+          "month": "Kwiecień",
+          "baseline_cashflow": 840000.0,
+          "simulated_cashflow": 1164750.0,
+          "simulated_income": 544750.0,
+          "simulated_expenses": 220000.0,
+          "math_reasoning": "840k + 145k (MRR) + 399.75k (Odzyskane) - 220k (Koszty)",
+          "event_trigger": "Wpływ z windykacji",
+          "confidence_score": 0.85
+        },
+        {
+          "month": "Maj",
+          "baseline_cashflow": 765000.0,
+          "simulated_cashflow": 1089750.0,
+          "simulated_income": 145000.0,
+          "simulated_expenses": 220000.0,
+          "math_reasoning": "1164.75k - 75k (Net burn)",
+          "event_trigger": "Brak",
+          "confidence_score": 0.9
+        },
+        {
+          "month": "Czerwiec",
+          "baseline_cashflow": 690000.0,
+          "simulated_cashflow": 1014750.0,
+          "simulated_income": 145000.0,
+          "simulated_expenses": 220000.0,
+          "math_reasoning": "1089.75k - 75k (Net burn)",
+          "event_trigger": "Brak",
+          "confidence_score": 0.9
+        },
+        {
+          "month": "Lipiec",
+          "baseline_cashflow": 615000.0,
+          "simulated_cashflow": 939750.0,
+          "simulated_income": 145000.0,
+          "simulated_expenses": 220000.0,
+          "math_reasoning": "1014.75k - 75k (Net burn)",
+          "event_trigger": "Brak",
+          "confidence_score": 0.85
+        },
+        {
+          "month": "Sierpień",
+          "baseline_cashflow": 540000.0,
+          "simulated_cashflow": 864750.0,
+          "simulated_income": 145000.0,
+          "simulated_expenses": 220000.0,
+          "math_reasoning": "939.75k - 75k (Net burn)",
+          "event_trigger": "Brak",
+          "confidence_score": 0.85
+        },
+        {
+          "month": "Wrzesień",
+          "baseline_cashflow": 465000.0,
+          "simulated_cashflow": 789750.0,
+          "simulated_income": 145000.0,
+          "simulated_expenses": 220000.0,
+          "math_reasoning": "864.75k - 75k (Net burn)",
+          "event_trigger": "Brak",
+          "confidence_score": 0.8
+        }
+      ]
+    }
+
+----------------------------------------------------------------------
+[T-016] Zatrudnienie handlowca — PASS
+Prompt: Czy stac mnie na zatrudnienie nowego handlowca za 12 000 PLN brutto miesiecznie? Przeanalizuj wplyw na cashflow.
+Route: strategic_debate | Response type: dashboard | Tool calls: 15 | Duration: 130.8s
+Blocks: ['metric_grid', 'alert_banner', 'text_card', 'data_table']
+--- FULL TEXT OUTPUT ---
+Analiza wykazuje rozbieżności w raportach sub-agentów. Optymista i Aktuariusz błędnie identyfikują zadłużenie FinBanku na 120 000 PLN, podczas gdy z danych Pesymisty wynika kwota 270 600 PLN brutto. Pesymista z kolei błędnie kalkuluje burn rate, ignorując wpływy gotówkowe. Ostateczna weryfikacja potwierdza: średnie wpływy to 96 350 PLN/mies., a wypływy 52 859 PLN/mies. Daje to realną nadwyżkę 43 491 PLN/mies. Zatrudnienie handlowca obniży ją do 29 034 PLN/mies. Głównym problemem firmy nie jest brak środków na inwestycje, lecz 399 750 PLN nieściągniętych należności i 59 000 PLN przeterminowanych zobowiązań wobec US i ZUS.
+Tak. Realny cashflow wynosi +43 491 PLN/mies., co w pełni pokrywa koszt etatu (14 450 PLN). Płynność zabezpiecza 840 000 PLN gotówki.
+Zatrudnienie handlowca jest bezpieczne. Realny cashflow po uwzględnieniu kosztu etatu wyniesie 29 034 PLN/mies. Raport Pesymisty błędnie zakładał utratę płynności, ignorując realne wpływy gotówkowe (96 350 PLN/mies.). Z kolei Optymista i Aktuariusz zaniżyli dług FinBanku do 120 000 PLN, podczas gdy faktyczne zadłużenie wynosi 270 600 PLN. Priorytetem przed onboardingiem nowego pracownika jest uregulowanie 59 000 PLN wobec instytucji państwowych.
+Weryfikacja danych i rekomendacja
+Kluczowe zatory płatnicze i zobowiązania
+['FinBank S.A.', 'Należność', '270 600 PLN', 'Przeterminowane']
+['E-commerce Giant', 'Należność', '73 800 PLN', 'Przeterminowane']
+['Urząd Skarbowy (VAT)', 'Zobowiązanie', '34 000 PLN', 'Krytyczne']
+['ZUS', 'Zobowiązanie', '25 000 PLN', 'Krytyczne']
+Podmiot
+Typ
+Kwota brutto
+Status
+--- RAW REPORT JSON ---
+{
+  "response_type": "dashboard",
+  "hero_recommendation": "Tak. Realny cashflow wynosi +43 491 PLN/mies., co w pełni pokrywa koszt etatu (14 450 PLN). Płynność zabezpiecza 840 000 PLN gotówki.",
+  "executive_summary": "Analiza wykazuje rozbieżności w raportach sub-agentów. Optymista i Aktuariusz błędnie identyfikują zadłużenie FinBanku na 120 000 PLN, podczas gdy z danych Pesymisty wynika kwota 270 600 PLN brutto. Pesymista z kolei błędnie kalkuluje burn rate, ignorując wpływy gotówkowe. Ostateczna weryfikacja potwierdza: średnie wpływy to 96 350 PLN/mies., a wypływy 52 859 PLN/mies. Daje to realną nadwyżkę 43 491 PLN/mies. Zatrudnienie handlowca obniży ją do 29 034 PLN/mies. Głównym problemem firmy nie jest brak środków na inwestycje, lecz 399 750 PLN nieściągniętych należności i 59 000 PLN przeterminowanych zobowiązań wobec US i ZUS.",
+  "major_action_plan": {
+    "opportunities": [
+      "Dywersyfikacja portfela klientów",
+      "Skrócenie DSO poprzez nowe umowy",
+      "Wykorzystanie 840 000 PLN rezerw do akwizycji"
+    ],
+    "risks": [
+      "Zatory płatnicze na 399 750 PLN",
+      "Zaległości wobec US i ZUS na 59 000 PLN",
+      "Brak wpływów od nowego handlowca przez pierwsze 4-6 miesięcy"
+    ],
+    "efficiency_metrics": [
+      "Średnia wartość kontraktu: 62 222 PLN netto",
+      "Próg rentowności etatu: 3 kontrakty rocznie",
+      "Prognozowany realny cashflow: +29 034 PLN/mies."
+    ],
+    "execution_playbook": [
+      {
+        "timeframe": "Tydzień 1",
+        "action_title": "Spłata zobowiązań publicznoprawnych",
+        "description": "Opłać 34 000 PLN do US oraz 25 000 PLN do ZUS, aby uniknąć blokady rachunków bankowych.",
+        "owner": "Zarząd"
+      },
+      {
+        "timeframe": "Tydzień 1-2",
+        "action_title": "Windykacja należności",
+        "description": "Rozpocznij formalną windykację 270 600 PLN od FinBank S.A. oraz 73 800 PLN od E-commerce Giant.",
+        "owner": "Dział Finansów"
+      },
+      {
+        "timeframe": "Tydzień 3-4",
+        "action_title": "Rekrutacja handlowca",
+        "description": "Zatrudnij pracownika z systemem prowizyjnym opartym wyłącznie o zapłacone faktury.",
+        "owner": "HR"
+      }
+    ]
+  },
+  "scenarios_analysis": [
+    {
+      "name": "Scenariusz A",
+      "processed_raw_context": "Podmioty: Nowy handlowiec. Metryki: Koszt 14 450 PLN/mies., Średni deal 62 222 PLN netto. Ramy czasowe: Miesiąc 1-6.",
+      "internal_analysis": "Zakładam, że handlowiec zaczyna generować przychody w 4 miesiącu. Do tego czasu cashflow spada o 14 450 PLN, następnie rośnie o 62 222 PLN co drugi miesiąc.",
+      "impact_description": "Wzrost przychodów i dywersyfikacja bazy klientów.",
+      "risk_level": "Niskie",
+      "health_score": 85,
+      "chart_data": [
+        {
+          "month": "Miesiąc 1",
+          "baseline_cashflow": 43491.0,
+          "simulated_cashflow": 29041.0,
+          "simulated_income": 96350.0,
+          "simulated_expenses": 67309.0,
+          "math_reasoning": "43491 - 14450 = 29041",
+          "event_trigger": "Zatrudnienie handlowca",
+          "confidence_score": 0.95
+        },
+        {
+          "month": "Miesiąc 2",
+          "baseline_cashflow": 43491.0,
+          "simulated_cashflow": 29041.0,
+          "simulated_income": 96350.0,
+          "simulated_expenses": 67309.0,
+          "math_reasoning": "43491 - 14450 = 29041",
+          "event_trigger": "Brak",
+          "confidence_score": 0.95
+        },
+        {
+          "month": "Miesiąc 3",
+          "baseline_cashflow": 43491.0,
+          "simulated_cashflow": 29041.0,
+          "simulated_income": 96350.0,
+          "simulated_expenses": 67309.0,
+          "math_reasoning": "43491 - 14450 = 29041",
+          "event_trigger": "Brak",
+          "confidence_score": 0.9
+        },
+        {
+          "month": "Miesiąc 4",
+          "baseline_cashflow": 43491.0,
+          "simulated_cashflow": 91263.0,
+          "simulated_income": 158572.0,
+          "simulated_expenses": 67309.0,
+          "math_reasoning": "29041 + 62222 = 91263",
+          "event_trigger": "Pierwszy zamknięty kontrakt",
+          "confidence_score": 0.8
+        },
+        {
+          "month": "Miesiąc 5",
+          "baseline_cashflow": 43491.0,
+          "simulated_cashflow": 29041.0,
+          "simulated_income": 96350.0,
+          "simulated_expenses": 67309.0,
+          "math_reasoning": "43491 - 14450 = 29041",
+          "event_trigger": "Brak",
+          "confidence_score": 0.85
+        },
+        {
+          "month": "Miesiąc 6",
+          "baseline_cashflow": 43491.0,
+          "simulated_cashflow": 91263.0,
+          "simulated_income": 158572.0,
+          "simulated_expenses": 67309.0,
+          "math_reasoning": "29041 + 62222 = 91263",
+          "event_trigger": "Drugi zamknięty kontrakt",
+          "confidence_score": 0.75
+        }
+      ]
+    },
+    {
+      "name": "Scenariusz B",
+      "processed_raw_context": "Podmioty: Firma, Handlowiec. Metryki: Realny cashflow 43 491 PLN, Koszt 
+
+----------------------------------------------------------------------
+[T-017] Inwestycja w marketing — PASS
+Prompt: Chce zainwestowac 50 000 PLN w kampanie marketingowa. Czy to sie oplaci przy moich obecnych przychodach?
+Route: strategic_debate | Response type: dashboard | Tool calls: 21 | Duration: 136.4s
+Blocks: ['alert_banner', 'metric_grid', 'text_card', 'chart']
+--- FULL TEXT OUTPUT ---
+Optymista błędnie ocenia bezpieczeństwo finansowe na podstawie salda 840 000 PLN i zafakturowanych 560 000 PLN, ignorując zatory płatnicze. Wartość nieściągniętych należności to 399 750 PLN, co daje wskaźnik DSO na poziomie 58%. Optymista myli się w ocenie realnej płynności, ponieważ z każdego zafakturowanego 1 PLN firma odzyskuje w terminie tylko 0,42 PLN. Inwestycja 50 000 PLN przekracza zidentyfikowany w Corporate Memory próg ryzyka utraty płynności wynoszący 40 000 PLN. Historyczna inwestycja 15 000 PLN w marketing w marcu skorelowała ze spadkiem przychodów o 42%. Brak wskaźników CAC i LTV uniemożliwia kontrolę rentowności tego wydatku.
+Odrzuć inwestycję 50 000 PLN w kampanię marketingową. Skieruj zasoby na windykację 399 750 PLN należności i uregulowanie 216 440 PLN własnych zobowiązań.
+W marcu 2026 r. poniesiono koszt 15 000 PLN na usługi Agencji Marketingowej Krzak. W tym samym miesiącu przychody spadły z 250 000 PLN do 145 000 PLN (spadek o 42%). Brak mierzalnych wskaźników CAC i LTV w systemie uniemożliwia weryfikację opłacalności. Firma nie posiada działu marketingu, co zwiększa ryzyko nieefektywnego wykorzystania budżetu 50 000 PLN.
+Analiza historyczna ROI z marketingu
+Przychody vs Wydatki Marketingowe (Q1 2026)
+Styczeń
+165000.0
+0.0
+Przychody
+Luty
+250000.0
+0.0
+Przychody
+Marzec
+145000.0
+15000.0
+Przychody
+--- RAW REPORT JSON ---
+{
+  "response_type": "dashboard",
+  "hero_recommendation": "Odrzuć inwestycję 50 000 PLN w kampanię marketingową. Skieruj zasoby na windykację 399 750 PLN należności i uregulowanie 216 440 PLN własnych zobowiązań.",
+  "executive_summary": "Optymista błędnie ocenia bezpieczeństwo finansowe na podstawie salda 840 000 PLN i zafakturowanych 560 000 PLN, ignorując zatory płatnicze. Wartość nieściągniętych należności to 399 750 PLN, co daje wskaźnik DSO na poziomie 58%. Optymista myli się w ocenie realnej płynności, ponieważ z każdego zafakturowanego 1 PLN firma odzyskuje w terminie tylko 0,42 PLN. Inwestycja 50 000 PLN przekracza zidentyfikowany w Corporate Memory próg ryzyka utraty płynności wynoszący 40 000 PLN. Historyczna inwestycja 15 000 PLN w marketing w marcu skorelowała ze spadkiem przychodów o 42%. Brak wskaźników CAC i LTV uniemożliwia kontrolę rentowności tego wydatku.",
+  "major_action_plan": {
+    "opportunities": [
+      "Odzyskanie 120 000 PLN od dłużnika FinBank",
+      "Redukcja wskaźnika DSO o 15% poprzez wdrożenie procesów windykacyjnych",
+      "Uwolnienie gotówki poprzez spłatę 216 440 PLN zaległych zobowiązań kosztowych"
+    ],
+    "risks": [
+      "Utrata płynności finansowej w kwietniu przy wzroście kosztów operacyjnych o ponad 40 000 PLN",
+      "Utrata kluczowych dostawców z powodu 216 440 PLN nieopłaconych faktur",
+      "Przepalenie budżetu z powodu braku wewnętrznego działu marketingu i braku pomiaru CAC/LTV"
+    ],
+    "efficiency_metrics": [
+      "Obecny wskaźnik DSO: 58%",
+      "Historyczny ROI z marketingu: Ujemny",
+      "Próg utraty płynności: 40 000 PLN/mies."
+    ],
+    "execution_playbook": [
+      {
+        "timeframe": "Tydzień 1",
+        "action_title": "Wstrzymanie wydatków marketingowych",
+        "description": "Zablokuj budżet 50 000 PLN na kampanię marketingową do czasu odzyskania płynności z zatorów płatniczych.",
+        "owner": "Zarząd"
+      },
+      {
+        "timeframe": "Tydzień 1-2",
+        "action_title": "Agresywna windykacja należności",
+        "description": "Skontaktuj się z FinBank w celu natychmiastowego odzyskania 120 000 PLN. Przekaż pozostałe 279 750 PLN do zewnętrznej kancelarii windykacyjnej.",
+        "owner": "Dział Finansów"
+      },
+      {
+        "timeframe": "Tydzień 2-3",
+        "action_title": "Uregulowanie zobowiązań",
+        "description": "Opłać 216 440 PLN zaległych faktur kosztowych z dostępnego salda gotówkowego, aby uniknąć kar umownych.",
+        "owner": "Księgowość"
+      },
+      {
+        "timeframe": "Tydzień 4",
+        "action_title": "Wdrożenie analityki Unit Economics",
+        "description": "Zdefiniuj i zaimplementuj pomiar wskaźników CAC oraz LTV przed zaplanowaniem jakichkolwiek przyszłych działań marketingowych.",
+        "owner": "Dział Finansów"
+      }
+    ]
+  },
+  "scenarios_analysis": [
+    {
+      "name": "Scenariusz A",
+      "processed_raw_context": "Wydatek 50 000 PLN na marketing. Brak windykacji. Koszty operacyjne rosną powyżej progu 40 000 PLN. Przychody na poziomie 145 000 PLN.",
+      "internal_analysis": "Dodanie 50 000 PLN do kosztów operacyjnych aktywuje krytyczne ryzyko z Corporate Memory. Przy wskaźniku ściągalności 42% nowe przychody nie pokryją bieżących zobowiązań. Firma traci płynność operacyjną.",
+      "impact_description": "Utrata płynności finansowej i brak środków na wynagrodzenia w kolejnym miesiącu.",
+      "risk_level": "Krytyczne",
+      "health_score": 20,
+      "chart_data": [
+        {
+          "month": "Kwiecień",
+          "baseline_cashflow": 840000.0,
+          "simulated_cashflow": 790000.0,
+          "simulated_income": 145000.0,
+          "simulated_expenses": 114000.0,
+          "math_reasoning": "840000 PLN - 50000 PLN wydatek marketingowy = 790000 PLN",
+          "event_trigger": "Wydatek marketingowy 50 000 PLN",
+          "confidence_score": 0.95
+        },
+        {
+          "month": "Maj",
+          "baseline_cashflow": 790000.0,
+          "simulated_cashflow": 573560.0,
+          "simulated_income": 145000.0,
+          "simulated_expenses": 64000.0,
+          "math_reasoning": "790000 PLN - 216440 PLN zaległe zobowiązania = 573560 PLN",
+          "event_trigger": "Wymagalność zaległych zobowiązań",
+          "confidence_score": 0.9
+        }
+      ]
+    },
+    {
+      "name": "Scenariusz B",
+      "processed_raw_context": "Wstrzymanie wydatku 50 000 PLN. Windykacja 120 000 PLN od FinBank. Spłata 216 440 PLN zobowiązań.",
+      "internal_analysis": "Skupienie się na windykacji poprawia strukturę bilansu. Odzyskanie środków od FinBank i spłata długów obniża ryzyko operacyjne do minimum.",
+      "impact_description": "Stabilizacja płynności, redukcja zatorów płatniczych i uniknięcie kar odsetkowych.",
+      "risk_level": "Niskie",
+      "health_score": 85,
+      "chart_data": [
+        {
+          "month": "Kwiecień",
+          "baseline_cashflow": 840000.0,
+          "simulated_cashflow": 960000.0,
+          "simulated_income": 145000.0,
+          "simulated_
+
+----------------------------------------------------------------------
+[NEG-002] Brak timeline bez pytania o plan — PASS
+Prompt: Jaka jest moja marza brutto?
+Route: instant | Response type: chat | Tool calls: 1 | Duration: 8.7s
+Blocks: []
+--- FULL TEXT OUTPUT ---
+Niestety, w dostępnych danych brakuje informacji o procentowej marży brutto (gross_margin_pct). Nie mogę podać tej wartości.
+--- RAW REPORT JSON ---
+{
+  "response_type": "chat",
+  "message": "Niestety, w dostępnych danych brakuje informacji o procentowej marży brutto (gross_margin_pct). Nie mogę podać tej wartości.",
+  "agent_timeline": [
+    {
+      "agent_name": "Instant Agent",
+      "timestamp": "2026-04-11T13:42:53.624176",
+      "step_type": "reasoning",
+      "content": "Szybkie wyszukiwanie danych (1 zapytań do narzędzi).",
+      "tool_name": null,
+      "tool_args": null
+    },
+    {
+      "agent_name": "System Triage",
+      "timestamp": "Faza Triage",
+      "step_type": "system",
+      "content": "Odebrano zapytanie CEO dotyczące marży brutto.",
+      "tool_name": null,
+      "tool_args": null
+    },
+    {
+      "agent_name": "Major CFO",
+      "timestamp": "Faza Analizy",
+      "step_type": "reasoning",
+      "content": "Zidentyfikowano potrzebę pobrania danych o marży brutto.",
+      "tool_name": null,
+      "tool_args": null
+    },
+    {
+      "agent_name": "Major CFO",
+      "timestamp": "Faza Zbierania Danych",
+      "step_type": "tool_call",
+      "content": "Próba pobrania wartości 'gross_margin_pct' z dostępnych źródeł danych.",
+      "tool_name": "Data Retrieval",
+      "tool_args": "SELECT gross_margin_pct FROM financial_data WHERE period = 'current'"
+    },
+    {
+      "agent_name": "Major CFO",
+      "timestamp": "Faza Zbierania Danych",
+      "step_type": "tool_result",
+      "content": "Otrzymano informację, że 'gross_margin_pct' jest niedostępne w danych.",
+      "tool_name": "Data Retrieval",
+      "tool_args": "Brak danych dla gross_margin_pct"
+    },
+    {
+      "agent_name": "Major CFO",
+      "timestamp": "Faza Generowania Odpowiedzi",
+      "step_type": "reasoning",
+      "content": "Sformułowano odpowiedź informującą o braku danych dotyczących marży brutto.",
+      "tool_name": null,
+      "tool_args": null
+    }
+  ]
+}
+
+----------------------------------------------------------------------
+[NEG-003] Brak dramatycznego tonu — PASS
+Prompt: Jak wyglada moja sytuacja finansowa?
+Route: analysis | Response type: dashboard | Tool calls: 4 | Duration: 85.9s
+Blocks: ['alert_banner', 'metric_grid', 'metric_grid', 'text_card']
+--- FULL TEXT OUTPUT ---
+Dostępna gotówka wynosi 840 000 PLN przy MRR na poziomie 145 000 PLN i burn rate 35 000 PLN. Wygenerowano 560 000 PLN przychodów netto wobec 320 600 PLN kosztów netto. Zidentyfikowano zatory płatnicze na kwotę 399 750 PLN brutto po stronie należności oraz 216 440 PLN brutto po stronie zobowiązań. Istnieje ryzyko utraty płynności w kwietniu przy wzroście kosztów o 40 000 PLN miesięcznie oraz ryzyko podatkowe związane z wadami prawnymi faktur.
+Spółka generuje zysk operacyjny, ale posiada 399 750 PLN przeterminowanych należności. Priorytetem jest natychmiastowa windykacja dłużnika FinBank na kwotę 120 000 PLN w celu zabezpieczenia płynności.
+Głównym dłużnikiem jest FinBank z kwotą 120 000 PLN za luty. Własne nieopłacone zobowiązania wynoszą 216 440 PLN brutto. Zidentyfikowano wady prawne w niezapłaconych fakturach, co generuje ryzyko braku możliwości odliczenia VAT. Koszty subskrypcji SaaS wymagają optymalizacji.
+Analiza zatorów płatniczych i ryzyk
+--- RAW REPORT JSON ---
+{
+  "response_type": "dashboard",
+  "hero_recommendation": "Spółka generuje zysk operacyjny, ale posiada 399 750 PLN przeterminowanych należności. Priorytetem jest natychmiastowa windykacja dłużnika FinBank na kwotę 120 000 PLN w celu zabezpieczenia płynności.",
+  "executive_summary": "Dostępna gotówka wynosi 840 000 PLN przy MRR na poziomie 145 000 PLN i burn rate 35 000 PLN. Wygenerowano 560 000 PLN przychodów netto wobec 320 600 PLN kosztów netto. Zidentyfikowano zatory płatnicze na kwotę 399 750 PLN brutto po stronie należności oraz 216 440 PLN brutto po stronie zobowiązań. Istnieje ryzyko utraty płynności w kwietniu przy wzroście kosztów o 40 000 PLN miesięcznie oraz ryzyko podatkowe związane z wadami prawnymi faktur.",
+  "major_action_plan": {
+    "opportunities": [
+      "Redukcja wskaźnika DSO o 15%",
+      "Optymalizacja kosztów subskrypcji SaaS",
+      "Automatyzacja procesu przypominania o płatnościach"
+    ],
+    "risks": [
+      "Utrata płynności w kwietniu przy wzroście kosztów o 40 000 PLN netto",
+      "Brak możliwości odliczenia VAT z powodu wad prawnych faktur",
+      "Dalszy wzrost nieopłaconych zobowiązań własnych"
+    ],
+    "efficiency_metrics": [
+      "Uwolnienie 120 000 PLN gotówki w Tydzień 1",
+      "Redukcja DSO o 15% w Q2",
+      "Obniżenie kosztów operacyjnych o 5% poprzez audyt SaaS"
+    ],
+    "execution_playbook": [
+      {
+        "timeframe": "Tydzień 1",
+        "action_title": "Windykacja FinBank",
+        "description": "Zadzwoń do FinBank i wyegzekwuj zaległą płatność w wysokości 120 000 PLN za luty.",
+        "owner": "Zarząd"
+      },
+      {
+        "timeframe": "Tydzień 2",
+        "action_title": "Automatyzacja należności",
+        "description": "Wdróż system automatycznych przypomnień o płatnościach dla wszystkich klientów B2B.",
+        "owner": "Dział Finansowy"
+      },
+      {
+        "timeframe": "Tydzień 3",
+        "action_title": "Audyt faktur i VAT",
+        "description": "Skoryguj faktury z wadami prawnymi w celu zabezpieczenia prawa do odliczenia podatku VAT.",
+        "owner": "Księgowość"
+      },
+      {
+        "timeframe": "Tydzień 4",
+        "action_title": "Optymalizacja SaaS",
+        "description": "Przeprowadź audyt subskrypcji oprogramowania i anuluj nieużywane licencje.",
+        "owner": "Dział IT"
+      }
+    ]
+  },
+  "scenarios_analysis": [
+    {
+      "name": "Scenariusz A: Agresywna windykacja",
+      "processed_raw_context": "Gotówka: 840 000 PLN. Należności: 399 750 PLN. Zobowiązania: 216 440 PLN. Dłużnik FinBank: 120 000 PLN.",
+      "internal_analysis": "Założono odzyskanie 120 000 PLN od FinBanku oraz redukcję DSO o 15 procent. Pozwala to na uregulowanie własnych zobowiązań i stabilizację cashflow.",
+      "impact_description": "Poprawa płynności i bezpieczny bufor gotówkowy.",
+      "risk_level": "Niskie",
+      "health_score": 85,
+      "chart_data": [
+        {
+          "month": "Kwiecień",
+          "baseline_cashflow": 840000.0,
+          "simulated_cashflow": 960000.0,
+          "simulated_income": 265000.0,
+          "simulated_expenses": 145000.0,
+          "math_reasoning": "840k + 120k (FinBank) = 960k",
+          "event_trigger": "Wpływ od FinBank",
+          "confidence_score": 0.9
+        },
+        {
+          "month": "Maj",
+          "baseline_cashflow": 805000.0,
+          "simulated_cashflow": 1000000.0,
+          "simulated_income": 185000.0,
+          "simulated_expenses": 145000.0,
+          "math_reasoning": "960k + 40k (nadwyżka operacyjna) = 1000k",
+          "event_trigger": "Redukcja DSO",
+          "confidence_score": 0.85
+        },
+        {
+          "month": "Czerwiec",
+          "baseline_cashflow": 770000.0,
+          "simulated_cashflow": 1040000.0,
+          "simulated_income": 185000.0,
+          "simulated_expenses": 145000.0,
+          "math_reasoning": "1000k + 40k = 1040k",
+          "event_trigger": "Brak",
+          "confidence_score": 0.85
+        },
+        {
+          "month": "Lipiec",
+          "baseline_cashflow": 735000.0,
+          "simulated_cashflow": 1080000.0,
+          "simulated_income": 185000.0,
+          "simulated_expenses": 145000.0,
+          "math_reasoning": "1040k + 40k = 1080k",
+          "event_trigger": "Brak",
+          "confidence_score": 0.8
+        },
+        {
+          "month": "Sierpień",
+          "baseline_cashflow": 700000.0,
+          "simulated_cashflow": 1120000.0,
+          "simulated_income": 185000.0,
+          "simulated_expenses": 145000.0,
+          "math_reasoning": "1080k + 40k = 1120k",
+          "event_trigger": "Brak",
+          "confidence_score": 0.8
+        },
+        {
+          "month": "Wrzesień",
+          "baseline_cashflow": 665000.0,
+          "simulated_cashflow": 1160000.0,
+          "simulated_income": 185000.0,
+          "simulated_expenses": 145000.0,
+          "math_reasoning": "1120k + 40k = 1160k",
+          "event_trigger": "Brak",
+          "confidence_score": 0.8
+        }
+      ]
+    },
+    {
+      "name": "Scenari
+
+----------------------------------------------------------------------
+[NEG-001b] Implicit Learning bramka — PASS
+simulation_cash before=None, after=None
+
+======================================================================
+PODSUMOWANIE
+======================================================================
+  PASS:  15/16
+  FAIL:  1/16
+  ERROR: 0/16
+  Total time: 885.8s
+
+FAILED/ERROR TESTS:
+  [T-001] Ile mam kasy (SafeCash test): FAIL
+    - BUG KASY: AI odpowiedzial 840k (z kontekstu) zamiast SafeCash (100000-200000 PLN). Liczby w odpowiedzi: [840000.0, 840000.0]

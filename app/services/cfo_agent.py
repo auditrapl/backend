@@ -1,3 +1,9 @@
+"""
+DEPRECATED — Ten plik NIE jest używany przez żaden router/endpoint.
+Frontend używa agentic_cfo.py → agentic_cfo_stream() (via conversations.py i cfo.py).
+Zachowany tymczasowo jako referencja architektury MoE + text-to-SQL.
+Do usunięcia po pełnej migracji na agentic flow.
+"""
 import os
 import json
 import logging

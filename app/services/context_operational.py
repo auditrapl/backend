@@ -170,6 +170,51 @@ def merge_operational(old: OperationalContext, new: OperationalContext) -> Opera
 # AI EKSTRAKCJA
 # ==============================================================================
 
+class ConversationIntent(BaseModel):
+    """Klasyfikacja intencji wypowiedzi użytkownika przed zapisem do kontekstu."""
+    intent: Literal['fact', 'simulation', 'question'] = Field(
+        description="'fact' = użytkownik stwierdza rzeczywisty stan (np. 'mamy 840k'). "
+                    "'simulation' = hipoteza/scenariusz (np. 'załóżmy że mamy 840k', 'co jeśli', 'gdyby'). "
+                    "'question' = pytanie bez nowych danych (np. 'ile mam kasy?')."
+    )
+    reasoning: str = Field(description="Krótkie uzasadnienie klasyfikacji")
+
+
+_INTENT_CLASSIFIER_PROMPT = """Sklasyfikuj intencję wypowiedzi użytkownika w kontekście finansowym.
+
+ZASADY:
+- 'fact': użytkownik STWIERDZA rzeczywisty stan firmy. Podaje twarde dane jako fakt.
+  Przykłady: "mamy 840k gotówki", "nasz MRR to 145k", "zatrudniamy 18 osób", "burn rate 35k"
+- 'simulation': użytkownik ZAKŁADA hipotetyczny scenariusz. Używa trybu warunkowego lub słów typu:
+  "załóżmy", "co jeśli", "gdyby", "a jakby", "wyobraźmy sobie", "w scenariuszu gdzie", "let's assume"
+  Przykłady: "załóżmy że mamy 840k", "co jeśli zatrudnimy 3 handlowców?", "gdybyśmy wydali 50k na marketing"
+- 'question': użytkownik PYTA o stan firmy bez podawania nowych danych.
+  Przykłady: "ile mam kasy?", "jak wygląda cashflow?", "jaki jest nasz runway?", "pokaż koszty"
+
+Jeśli wypowiedź zawiera MIX faktu i hipotezy — wybierz 'simulation' (bezpieczniej nie zapisywać).
+"""
+
+
+async def classify_conversation_intent(text: str) -> ConversationIntent:
+    """Klasyfikuje intent użytkownika: fakt / symulacja / pytanie."""
+    client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+    try:
+        response = await client.aio.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=text,
+            config=types.GenerateContentConfig(
+                system_instruction=_INTENT_CLASSIFIER_PROMPT,
+                response_mime_type="application/json",
+                response_schema=ConversationIntent,
+                temperature=0.0,
+            ),
+        )
+        return ConversationIntent.model_validate_json(response.text)
+    except Exception as e:
+        logger.warning(f"[Intent Classifier] Błąd klasyfikacji, fallback → question (bezpieczny): {e}")
+        return ConversationIntent(intent="question", reasoning=f"Fallback z powodu błędu: {e}")
+
+
 async def extract_operational_from_conversation(text: str) -> OperationalContext:
     """Gemini extractor skupiony na L2 — bieżącym stanie operacyjnym."""
     client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
@@ -185,7 +230,8 @@ ZASADY:
 6. GOTÓWKA: Jeśli użytkownik wspomina kwotę gotówki (np. "mamy 840k gotówki", "stan konta 500k"),
    zapisz ją w polu simulation_cash (NIE cash_on_hand). cash_on_hand jest obliczane
    automatycznie z faktur (SafeCash) i nie powinno być wyciągane z rozmowy.
-7. Pola receivables_total i payables_total ustaw na null — są obliczane automatycznie z faktur."""
+7. Pola receivables_total i payables_total ustaw na null — są obliczane automatycznie z faktur.
+8. WYCIĄGAJ TYLKO TWIERDZENIA FAKTYCZNE. Jeśli wypowiedź to pytanie lub hipoteza — zwróć same nulle."""
 
     response = client.models.generate_content(
         model='gemini-2.5-flash',
@@ -568,7 +614,20 @@ async def process_and_upsert_operational(
     company_id: uuid.UUID,
     text_source: str,
 ) -> OperationalContext:
-    """Ekstrakcja AI + merge + zapis L2. Zastępuje process_and_upsert_context z context_manager."""
+    """
+    Ekstrakcja AI + merge + zapis L2. Zastępuje process_and_upsert_context z context_manager.
+    BRAMKA: Klasyfikuje intent wypowiedzi. Zapisuje do L2 TYLKO fakty.
+    Symulacje i pytania są pomijane — nie zanieczyszczają kontekstu operacyjnego.
+    """
+    # ── BRAMKA: klasyfikacja intent ──
+    intent = await classify_conversation_intent(text_source)
+    logger.info(f"[Implicit Learning] intent={intent.intent}, reasoning={intent.reasoning}")
+
+    if intent.intent != "fact":
+        logger.info(f"[Implicit Learning] Pominięto zapis L2 — intent '{intent.intent}' (nie fakt)")
+        return await get_or_create_operational(db, company_id)
+
+    # ── Tylko fakty przechodzą dalej ──
     old = await get_or_create_operational(db, company_id)
     new = await extract_operational_from_conversation(text_source)
     merged = merge_operational(old, new)

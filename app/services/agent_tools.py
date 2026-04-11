@@ -13,6 +13,10 @@ logger = logging.getLogger(__name__)
 # Max execution time for a single SQL query (seconds)
 SQL_STATEMENT_TIMEOUT_S = 10
 
+# ── In-memory cache for corporate memory (TTL 60s) ──
+_memory_cache: dict[str, tuple[float, str]] = {}  # company_id → (timestamp, text)
+_MEMORY_CACHE_TTL = 60.0  # seconds
+
 FORBIDDEN_SQL_KEYWORDS = [
     "DROP ", "DELETE ", "UPDATE ", "INSERT ", "ALTER ", "TRUNCATE ",
     "GRANT ", "REVOKE ", "CREATE ", "EXEC ", "EXECUTE ",
@@ -87,25 +91,40 @@ def make_execute_sql_query(company_id: str) -> Callable:
 def make_search_corporate_memory(company_id: str) -> Callable:
     async def search_corporate_memory(query: str) -> str:
         """
-        Przeszukuje pamięć korporacyjną firmy (CompanyContext).
-        Parametr 'query' opisuje czego szukasz — kontekst firmy zostanie zwrócony jako JSON.
-        Zawiera: profil firmy, sytuację finansową, unit economics, ryzyka, cele strategiczne.
+        Przeszukuje pamięć korporacyjną firmy (3-warstwowy kontekst: kanoniczny + operacyjny + snapshoty).
+        Parametr 'query' opisuje czego szukasz.
+        Zawiera: profil firmy, SafeCash (gotówka z faktur), MRR, burn rate,
+        należności, zobowiązania, runway, ryzyka, cele strategiczne.
+        SafeCash to TWARDE ŹRÓDŁO PRAWDY o gotówce — wyliczane automatycznie z opłaconych faktur.
         """
+        import time as _time
         logger.info(f"[MEMORY_TOOL] company={company_id[:8]}.. query={query[:200]}")
 
-        try:
-            async with AsyncSessionLocal() as db:
-                context_record = await get_or_create_context(db, uuid.UUID(company_id))
-                data = context_record.context_data
+        # ── Cache check (TTL 60s) — instant calls reuse cached context ──
+        cached = _memory_cache.get(company_id)
+        if cached:
+            ts, text = cached
+            if (_time.time() - ts) < _MEMORY_CACHE_TTL:
+                logger.info(f"[MEMORY_CACHE_HIT] company={company_id[:8]}.. ({len(text)} chars)")
+                return text
 
-                if not data:
+        try:
+            from app.services.context_assembler import assemble_full_context_text
+            async with AsyncSessionLocal() as db:
+                context_text = await assemble_full_context_text(
+                    db, uuid.UUID(company_id), include_snapshots=True
+                )
+
+                if not context_text or context_text == "Brak kontekstu firmowego.":
                     return json.dumps({
                         "info": "Pamięć korporacyjna jest pusta. Firma nie ma jeszcze zaindeksowanych dokumentów.",
                         "hint": "Poproś użytkownika o upload dokumentów finansowych (bilans, PnL, umowy)."
                     })
 
-                logger.info(f"[MEMORY_RESULT] Returned context with {len(json.dumps(data, default=str))} chars")
-                return json.dumps(data, default=str, ensure_ascii=False)
+                # ── Cache store ──
+                _memory_cache[company_id] = (_time.time(), context_text)
+                logger.info(f"[MEMORY_RESULT] Returned + cached context ({len(context_text)} chars)")
+                return context_text
 
         except Exception as e:
             logger.error(f"[MEMORY_ERROR] {str(e)}")

@@ -1,0 +1,266 @@
+{
+  "timestamp": "2026-04-11T16:03:38.676988",
+  "company_id": "4a00cc9b-0aac-4d55-8873-06696b7188b3",
+  "summary": {
+    "passed": 16,
+    "failed": 0,
+    "errored": 0,
+    "total": 16
+  },
+  "results": [
+    {
+      "id": "T-001",
+      "name": "Ile mam kasy (SafeCash test)",
+      "group": "A",
+      "status": "PASS",
+      "route": "instant",
+      "response_type": "dashboard",
+      "duration_sec": 20.87,
+      "tool_calls": 1,
+      "blocks_found": [
+        "metric_grid",
+        "text_card"
+      ],
+      "errors": []
+    },
+    {
+      "id": "T-002",
+      "name": "Ile faktur w systemie",
+      "group": "A",
+      "status": "PASS",
+      "route": "instant",
+      "response_type": "dashboard",
+      "duration_sec": 18.04,
+      "tool_calls": 1,
+      "blocks_found": [
+        "metric_grid"
+      ],
+      "errors": []
+    },
+    {
+      "id": "T-003",
+      "name": "Kto jest najwiekszym klientem",
+      "group": "A",
+      "status": "PASS",
+      "route": "instant",
+      "response_type": "dashboard",
+      "duration_sec": 18.05,
+      "tool_calls": 1,
+      "blocks_found": [
+        "metric_grid",
+        "text_card"
+      ],
+      "errors": []
+    },
+    {
+      "id": "T-004",
+      "name": "Ile zaleglosci",
+      "group": "A",
+      "status": "PASS",
+      "route": "instant",
+      "response_type": "dashboard",
+      "duration_sec": 18.73,
+      "tool_calls": 1,
+      "blocks_found": [
+        "metric_grid",
+        "text_card"
+      ],
+      "errors": []
+    },
+    {
+      "id": "T-005",
+      "name": "Najwyzszy koszt kontrahent",
+      "group": "A",
+      "status": "PASS",
+      "route": "instant",
+      "response_type": "dashboard",
+      "duration_sec": 35.01,
+      "tool_calls": 1,
+      "blocks_found": [
+        "metric_grid",
+        "text_card",
+        "chart"
+      ],
+      "errors": []
+    },
+    {
+      "id": "T-006",
+      "name": "Lista kontrahentow z przychodami",
+      "group": "B",
+      "status": "PASS",
+      "route": "instant",
+      "response_type": "dashboard",
+      "duration_sec": 25.27,
+      "tool_calls": 1,
+      "blocks_found": [
+        "metric_grid",
+        "data_table",
+        "text_card"
+      ],
+      "errors": []
+    },
+    {
+      "id": "T-007",
+      "name": "Niezaplacone faktury",
+      "group": "B",
+      "status": "PASS",
+      "route": "instant",
+      "response_type": "dashboard",
+      "duration_sec": 41.26,
+      "tool_calls": 1,
+      "blocks_found": [
+        "alert_banner",
+        "metric_grid",
+        "data_table"
+      ],
+      "errors": []
+    },
+    {
+      "id": "T-008",
+      "name": "Struktura kosztow",
+      "group": "B",
+      "status": "PASS",
+      "route": "analysis",
+      "response_type": "dashboard",
+      "duration_sec": 89.27,
+      "tool_calls": 1,
+      "blocks_found": [
+        "metric_grid",
+        "chart",
+        "data_table",
+        "text_card"
+      ],
+      "errors": []
+    },
+    {
+      "id": "T-011",
+      "name": "Analiza cashflow",
+      "group": "C",
+      "status": "PASS",
+      "route": "analysis",
+      "response_type": "dashboard",
+      "duration_sec": 96.77,
+      "tool_calls": 3,
+      "blocks_found": [
+        "alert_banner",
+        "metric_grid",
+        "chart",
+        "text_card",
+        "data_table"
+      ],
+      "errors": []
+    },
+    {
+      "id": "T-012",
+      "name": "Ryzyko koncentracji klientow",
+      "group": "C",
+      "status": "PASS",
+      "route": "analysis",
+      "response_type": "dashboard",
+      "duration_sec": 72.56,
+      "tool_calls": 1,
+      "blocks_found": [
+        "alert_banner",
+        "metric_grid",
+        "chart",
+        "data_table",
+        "text_card"
+      ],
+      "errors": []
+    },
+    {
+      "id": "T-013",
+      "name": "Analiza naleznosci",
+      "group": "C",
+      "status": "PASS",
+      "route": "analysis",
+      "response_type": "dashboard",
+      "duration_sec": 81.55,
+      "tool_calls": 3,
+      "blocks_found": [
+        "alert_banner",
+        "metric_grid",
+        "text_card",
+        "data_table"
+      ],
+      "errors": []
+    },
+    {
+      "id": "T-016",
+      "name": "Zatrudnienie handlowca",
+      "group": "D",
+      "status": "PASS",
+      "route": "strategic_debate",
+      "response_type": "dashboard",
+      "duration_sec": 100.78,
+      "tool_calls": 14,
+      "blocks_found": [
+        "alert_banner",
+        "metric_grid",
+        "text_card",
+        "data_table",
+        "chart"
+      ],
+      "errors": []
+    },
+    {
+      "id": "T-017",
+      "name": "Inwestycja w marketing",
+      "group": "D",
+      "status": "PASS",
+      "route": "strategic_debate",
+      "response_type": "dashboard",
+      "duration_sec": 145.86,
+      "tool_calls": 18,
+      "blocks_found": [
+        "alert_banner",
+        "metric_grid",
+        "text_card",
+        "chart"
+      ],
+      "errors": []
+    },
+    {
+      "id": "NEG-002",
+      "name": "Brak timeline bez pytania o plan",
+      "group": "NEG",
+      "status": "PASS",
+      "route": "instant",
+      "response_type": "chat",
+      "duration_sec": 13.03,
+      "tool_calls": 1,
+      "blocks_found": [],
+      "errors": []
+    },
+    {
+      "id": "NEG-003",
+      "name": "Brak dramatycznego tonu",
+      "group": "NEG",
+      "status": "PASS",
+      "route": "analysis",
+      "response_type": "dashboard",
+      "duration_sec": 88.18,
+      "tool_calls": 3,
+      "blocks_found": [
+        "alert_banner",
+        "metric_grid",
+        "text_card",
+        "metric_grid",
+        "text_card"
+      ],
+      "errors": []
+    },
+    {
+      "id": "NEG-001b",
+      "name": "Implicit Learning bramka — symulacja nie zapisuje do L2",
+      "group": "NEG",
+      "status": "PASS",
+      "route": null,
+      "response_type": null,
+      "duration_sec": 34.28,
+      "tool_calls": 0,
+      "blocks_found": [],
+      "errors": []
+    }
+  ]
+}

@@ -6,8 +6,8 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from app.database import engine, Base
 from app.api import invoices, auth, departments, dashboard, notifications, documents
-from app.api.routers import reports, strategy, anomalies, taxes, cfo, context as context_router, cashflow
-from app.services.morning_briefing import generate_daily_briefings_for_all_companies
+from app.api.routers import reports, strategy, anomalies, taxes, cfo, context as context_router, cashflow, conversations
+from app.services.morning_briefing import generate_daily_briefings_for_all_companies, send_morning_emails_for_all_companies
 from app.services.context_snapshots import (
     trigger_weekly_snapshots_for_all_companies,
     trigger_monthly_snapshots_for_all_companies,
@@ -32,6 +32,15 @@ async def lifespan(app: FastAPI):
         replace_existing=True,
     )
 
+    # ─── PORANNA WYSYŁKA EMAIL: CRON 07:00 codziennie ───
+    scheduler.add_job(
+        send_morning_emails_for_all_companies,
+        trigger=CronTrigger(hour=7, minute=0),
+        id="morning_email",
+        name="Poranna Wysyłka Email — Morning Briefing",
+        replace_existing=True,
+    )
+
     # ─── SNAPSHOTY KONTEKSTU: tygodniowe (niedziela 01:00) i miesięczne (1. dnia 02:00) ───
     from app.database import AsyncSessionLocal as _ASL
 
@@ -53,7 +62,7 @@ async def lifespan(app: FastAPI):
     )
 
     scheduler.start()
-    logger.info("APScheduler started — Morning Briefing 03:00 | Weekly Snapshot Sun 01:00 | Monthly Snapshot 1st 02:00")
+    logger.info("APScheduler started — Briefing Gen 03:00 | Email Send 07:00 | Weekly Snapshot Sun 01:00 | Monthly 1st 02:00")
 
     yield
 
@@ -96,6 +105,7 @@ app.include_router(taxes.router, prefix="/api/taxes", tags=["Taxes API"])
 app.include_router(cfo.router, prefix="/api/cfo", tags=["Major CFO API"])
 app.include_router(context_router.router, prefix="/api/context", tags=["Context Management API"])
 app.include_router(cashflow.router, prefix="/api/cashflow", tags=["Cashflow API"])
+app.include_router(conversations.router, prefix="/api/cfo/conversations", tags=["CFO Conversations API"])
 
 @app.get("/")
 async def root(_: dict = Depends(verify_token)):
