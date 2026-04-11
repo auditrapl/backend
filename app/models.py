@@ -34,6 +34,21 @@ class Company(AsyncAttrs, Base):
 
     users: Mapped[list["User"]] = relationship("User", back_populates="company")
     invoices: Mapped[list["Invoice"]] = relationship("Invoice", back_populates="company")
+    billing_subscriptions: Mapped[list["BillingSubscription"]] = relationship(
+        "BillingSubscription",
+        back_populates="company",
+        cascade="all, delete-orphan",
+    )
+    billing_payments: Mapped[list["BillingPayment"]] = relationship(
+        "BillingPayment",
+        back_populates="company",
+        cascade="all, delete-orphan",
+    )
+    billing_invoices: Mapped[list["BillingInvoice"]] = relationship(
+        "BillingInvoice",
+        back_populates="company",
+        cascade="all, delete-orphan",
+    )
     departments: Mapped[list["Department"]] = relationship("Department", back_populates="company", cascade="all, delete-orphan")
     documents: Mapped[list["Document"]] = relationship("Document", back_populates="company", cascade="all, delete-orphan")
     company_documents: Mapped[list["CompanyDocument"]] = relationship("CompanyDocument", back_populates="company", cascade="all, delete-orphan")
@@ -110,10 +125,125 @@ class User(AsyncAttrs, Base):
     first_name: Mapped[str | None] = mapped_column(String, nullable=True)
     last_name: Mapped[str | None] = mapped_column(String, nullable=True)
     company_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("companies.id"), nullable=True)
+    stripe_customer_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    stripe_subscription_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     company: Mapped["Company"] = relationship("Company", back_populates="users")
     invoices: Mapped[list["Invoice"]] = relationship("Invoice", back_populates="user")
+    billing_subscriptions: Mapped[list["BillingSubscription"]] = relationship(
+        "BillingSubscription",
+        back_populates="user",
+    )
+    billing_payments: Mapped[list["BillingPayment"]] = relationship(
+        "BillingPayment",
+        back_populates="user",
+    )
+    billing_invoices: Mapped[list["BillingInvoice"]] = relationship(
+        "BillingInvoice",
+        back_populates="user",
+    )
+
+
+class BillingPlan(AsyncAttrs, Base):
+    __tablename__ = "billing_plans"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    stripe_product_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    stripe_price_id: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    currency: Mapped[str] = mapped_column(String, default="usd")
+    interval: Mapped[str | None] = mapped_column(String, nullable=True)
+    interval_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    amount: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
+    metadata_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    subscriptions: Mapped[list["BillingSubscription"]] = relationship("BillingSubscription", back_populates="plan")
+
+
+class BillingSubscription(AsyncAttrs, Base):
+    __tablename__ = "billing_subscriptions"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    company_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("companies.id"), nullable=False, index=True)
+    user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
+    plan_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("billing_plans.id"), nullable=True, index=True)
+    stripe_subscription_id: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
+    stripe_customer_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String, default="incomplete")
+    current_period_start: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    current_period_end: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    cancel_at_period_end: Mapped[bool] = mapped_column(Boolean, default=False)
+    canceled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    trial_end: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    company: Mapped["Company"] = relationship("Company", back_populates="billing_subscriptions")
+    user: Mapped["User" | None] = relationship("User", back_populates="billing_subscriptions")
+    plan: Mapped["BillingPlan" | None] = relationship("BillingPlan", back_populates="subscriptions")
+    payments: Mapped[list["BillingPayment"]] = relationship(
+        "BillingPayment",
+        back_populates="subscription",
+        cascade="all, delete-orphan",
+    )
+    invoices: Mapped[list["BillingInvoice"]] = relationship(
+        "BillingInvoice",
+        back_populates="subscription",
+        cascade="all, delete-orphan",
+    )
+
+
+class BillingPayment(AsyncAttrs, Base):
+    __tablename__ = "billing_payments"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    company_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("companies.id"), nullable=False, index=True)
+    user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
+    subscription_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("billing_subscriptions.id"), nullable=True, index=True)
+    stripe_invoice_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    stripe_payment_intent_id: Mapped[str | None] = mapped_column(String, nullable=True, unique=True, index=True)
+    amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+    currency: Mapped[str] = mapped_column(String, default="USD")
+    status: Mapped[str] = mapped_column(String, default="pending")
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    failure_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    company: Mapped["Company"] = relationship("Company", back_populates="billing_payments")
+    user: Mapped["User" | None] = relationship("User", back_populates="billing_payments")
+    subscription: Mapped["BillingSubscription" | None] = relationship("BillingSubscription", back_populates="payments")
+
+
+class BillingInvoice(AsyncAttrs, Base):
+    __tablename__ = "billing_invoices"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    company_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("companies.id"), nullable=False, index=True)
+    user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
+    subscription_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("billing_subscriptions.id"), nullable=True, index=True)
+    stripe_invoice_id: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
+    number: Mapped[str | None] = mapped_column(String, nullable=True)
+    status: Mapped[str] = mapped_column(String, default="draft")
+    amount_due: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
+    amount_paid: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
+    currency: Mapped[str] = mapped_column(String, default="USD")
+    invoice_pdf_url: Mapped[str | None] = mapped_column(String, nullable=True)
+    hosted_invoice_url: Mapped[str | None] = mapped_column(String, nullable=True)
+    period_start: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    period_end: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    due_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    company: Mapped["Company"] = relationship("Company", back_populates="billing_invoices")
+    user: Mapped["User" | None] = relationship("User", back_populates="billing_invoices")
+    subscription: Mapped["BillingSubscription" | None] = relationship("BillingSubscription", back_populates="invoices")
 
 class Invoice(AsyncAttrs, Base):
     __tablename__ = "invoices"

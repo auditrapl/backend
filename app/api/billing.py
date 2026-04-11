@@ -12,25 +12,33 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user
 from app.auth import verify_token
 from app.database import get_db
-from app.models import Company, User
+from app.models import BillingPlan, Company, User
 from app.schemas import (
     BillingCheckoutRequest,
     BillingCheckoutResponse,
     BillingInvoiceItem,
+    BillingPlanItemResponse,
+    BillingPlansResponse,
+    BillingPlanSyncResponse,
     BillingPortalRequest,
     BillingPortalResponse,
     BillingStatusResponse,
 )
 from app.services.stripe_billing import (
+    StripeServiceError,
     apply_subscription_to_company,
-    configure_stripe,
+    construct_webhook_event,
     create_checkout_session,
     create_portal_session,
     default_checkout_urls,
     default_price_id,
     ensure_stripe_customer,
     from_unix,
+    list_customer_invoices,
     parse_invoice_summary,
+    retrieve_subscription,
+    retrieve_upcoming_invoice,
+    sync_stripe_products_and_prices,
     stripe_is_configured,
     to_decimal_from_cents,
 )
@@ -46,6 +54,13 @@ def ensure_billing_ready() -> None:
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Stripe billing is not configured",
         )
+
+
+def raise_stripe_http_error(exc: StripeServiceError) -> None:
+    raise HTTPException(
+        status_code=status.HTTP_502_BAD_GATEWAY,
+        detail=str(exc),
+    )
 
 
 def ensure_company_or_400(current_user: User, company: Company | None) -> Company:
@@ -79,7 +94,6 @@ async def create_billing_checkout_session(
     db: AsyncSession = Depends(get_db),
 ):
     ensure_billing_ready()
-    configure_stripe()
 
     company = await get_user_company(db, current_user)
 
@@ -94,7 +108,10 @@ async def create_billing_checkout_session(
     success_url = payload.success_url or default_success
     cancel_url = payload.cancel_url or default_cancel
 
-    customer_id = ensure_stripe_customer(company, current_user)
+    try:
+        customer_id = ensure_stripe_customer(company, current_user)
+    except StripeServiceError as exc:
+        raise_stripe_http_error(exc)
     if not company.stripe_customer_id:
         company.stripe_customer_id = customer_id
 
@@ -127,7 +144,6 @@ async def create_billing_portal(
     db: AsyncSession = Depends(get_db),
 ):
     ensure_billing_ready()
-    configure_stripe()
 
     company = await get_user_company(db, current_user)
     if not company.stripe_customer_id:
@@ -137,7 +153,10 @@ async def create_billing_portal(
         )
 
     return_url = payload.return_url or default_checkout_urls()[0]
-    portal = create_portal_session(company.stripe_customer_id, return_url)
+    try:
+        portal = create_portal_session(company.stripe_customer_id, return_url)
+    except StripeServiceError as exc:
+        raise_stripe_http_error(exc)
     return BillingPortalResponse(portal_url=portal.url)
 
 
@@ -166,25 +185,29 @@ async def get_billing_status(
             invoices=[],
         )
 
-    configure_stripe()
-
     invoices: list[BillingInvoiceItem] = []
     next_charge_amount = None
     next_charge_date = None
 
     if company.stripe_customer_id:
-        stripe_invoices = stripe.Invoice.list(customer=company.stripe_customer_id, limit=6)
+        try:
+            stripe_invoices = list_customer_invoices(company.stripe_customer_id, limit=6)
+        except StripeServiceError as exc:
+            raise_stripe_http_error(exc)
         invoices = [BillingInvoiceItem(**parse_invoice_summary(inv)) for inv in stripe_invoices.data]
 
     if company.stripe_subscription_id:
-        subscription = stripe.Subscription.retrieve(company.stripe_subscription_id)
+        try:
+            subscription = retrieve_subscription(company.stripe_subscription_id)
+        except StripeServiceError as exc:
+            raise_stripe_http_error(exc)
         apply_subscription_to_company(company, subscription)
 
         try:
-            upcoming = stripe.Invoice.upcoming(customer=company.stripe_customer_id)
+            upcoming = retrieve_upcoming_invoice(company.stripe_customer_id)
             next_charge_amount = to_decimal_from_cents(upcoming.get("amount_due"))
             next_charge_date = from_unix(upcoming.get("next_payment_attempt"))
-        except Exception:
+        except StripeServiceError:
             # No upcoming invoice exists in some statuses, e.g. canceled trials.
             next_charge_amount = None
             next_charge_date = None
@@ -208,11 +231,71 @@ async def get_billing_status(
     )
 
 
+@router.get(
+    "/plans",
+    response_model=BillingPlansResponse,
+    dependencies=[Depends(verify_token)],
+)
+async def get_billing_plans(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await get_user_company(db, current_user)
+    ensure_billing_ready()
+
+    result = await db.execute(select(BillingPlan).where(BillingPlan.is_active.is_(True)).order_by(BillingPlan.amount.asc()))
+    plans = result.scalars().all()
+
+    if not plans:
+        try:
+            await sync_stripe_products_and_prices(db)
+        except StripeServiceError as exc:
+            raise_stripe_http_error(exc)
+        result = await db.execute(select(BillingPlan).where(BillingPlan.is_active.is_(True)).order_by(BillingPlan.amount.asc()))
+        plans = result.scalars().all()
+
+    response_items = [
+        BillingPlanItemResponse(
+            stripe_product_id=plan.stripe_product_id,
+            stripe_price_id=plan.stripe_price_id,
+            name=plan.name,
+            description=plan.description,
+            currency=(plan.currency or "USD").upper(),
+            interval=plan.interval,
+            interval_count=plan.interval_count,
+            amount=plan.amount,
+            is_active=plan.is_active,
+        )
+        for plan in plans
+    ]
+
+    return BillingPlansResponse(plans=response_items)
+
+
+@router.post(
+    "/sync-plans",
+    response_model=BillingPlanSyncResponse,
+    dependencies=[Depends(verify_token)],
+)
+async def sync_billing_plans(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    # Enforce company membership to keep this endpoint scoped to authenticated tenants.
+    await get_user_company(db, current_user)
+    ensure_billing_ready()
+
+    try:
+        synced_count = await sync_stripe_products_and_prices(db)
+    except StripeServiceError as exc:
+        raise_stripe_http_error(exc)
+
+    return BillingPlanSyncResponse(synced_count=synced_count)
+
+
 @router.post("/webhook")
 async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     stripe_available = stripe_is_configured()
-    if stripe_available:
-        configure_stripe()
 
     payload = await request.body()
     signature = request.headers.get("Stripe-Signature")
@@ -225,8 +308,8 @@ async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
         )
 
     try:
-        event = stripe.Webhook.construct_event(payload=payload, sig_header=signature, secret=secret)
-    except Exception:
+        construct_webhook_event(payload=payload, signature=signature, secret=secret)
+    except StripeServiceError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid webhook signature")
 
     event_payload = json.loads(payload.decode("utf-8"))
@@ -270,7 +353,10 @@ async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
                     logger.warning("Invalid company_id in Stripe metadata: %s", metadata_company_id)
 
         if company and subscription_id and stripe_available:
-            subscription = stripe.Subscription.retrieve(subscription_id)
+            try:
+                subscription = retrieve_subscription(subscription_id)
+            except StripeServiceError as exc:
+                raise_stripe_http_error(exc)
             apply_subscription_to_company(company, subscription)
         elif company and subscription_id and not stripe_available:
             company.stripe_subscription_id = subscription_id

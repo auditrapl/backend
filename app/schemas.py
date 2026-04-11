@@ -84,6 +84,8 @@ class UserResponse(BaseModel):
     id: UUID
     email: str
     company_id: Optional[UUID]
+    stripe_customer_id: Optional[str] = None
+    stripe_subscription_id: Optional[str] = None
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
 
@@ -550,6 +552,26 @@ class BillingStatusResponse(BaseModel):
     next_charge_amount: Optional[Decimal] = None
     next_charge_date: Optional[datetime] = None
     invoices: list[BillingInvoiceItem] = Field(default_factory=list)
+
+
+class BillingPlanItemResponse(BaseModel):
+    stripe_product_id: str
+    stripe_price_id: str
+    name: str
+    description: Optional[str] = None
+    currency: str
+    interval: Optional[str] = None
+    interval_count: Optional[int] = None
+    amount: Optional[Decimal] = None
+    is_active: bool = True
+
+
+class BillingPlansResponse(BaseModel):
+    plans: list[BillingPlanItemResponse] = Field(default_factory=list)
+
+
+class BillingPlanSyncResponse(BaseModel):
+    synced_count: int
 
 
 class DocumentSummaryOutput(BaseModel):
