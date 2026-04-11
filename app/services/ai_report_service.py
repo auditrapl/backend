@@ -116,7 +116,8 @@ class ReportOrchestrator:
             if retry_count == 0:
                 yield f"data: {json.dumps({'step': 'sql', 'content': clean_sql})}\n\n"
             else:
-                yield f"data: {json.dumps({'step': 'sql', 'content': f'-- AUTO-KOREKTA (Próba {retry_count}):\n{clean_sql}'})}\n\n"
+                corrected_sql = f"-- AUTO-KOREKTA (Proba {retry_count}):\n{clean_sql}"
+                yield f"data: {json.dumps({'step': 'sql', 'content': corrected_sql})}\n\n"
 
             # SECURITY CHECK
             upper_sql = clean_sql.upper()
