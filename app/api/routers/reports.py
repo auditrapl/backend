@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.database import get_db
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_feature
 from app.auth import verify_token
 from app.models import Report, User
 from app.schemas import ReportCreate, ReportResponse
@@ -15,6 +15,7 @@ from fastapi.responses import StreamingResponse
 @router.post("/generate")
 async def generate_report(
     request: ReportCreate,
+    _feature_gate: dict = Depends(require_feature("reports.generate")),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):

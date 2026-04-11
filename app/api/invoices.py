@@ -12,6 +12,7 @@ from app.auth import verify_token
 from app.services.audit_service import AuditService
 from app.services.notification_service import NotificationService
 from app.services.context_operational import refresh_safecash_background
+from app.services.fa3_parser import parse_fa3_xml
 
 router = APIRouter(tags=["invoices"], dependencies=[Depends(verify_token)])
 
@@ -48,6 +49,25 @@ async def create_invoice(
 
     try:
         invoice_data = invoice.model_dump(exclude_unset=True)
+
+        # Auto-parse KSeF FA(3) XML if provided and enrich invoice payload.
+        if invoice_data.get("ksef_xml"):
+            try:
+                parsed = parse_fa3_xml(invoice_data["ksef_xml"])
+                invoice_data["parsed_data"] = parsed
+                invoice_data["ksef_number"] = invoice_data.get("ksef_number") or parsed["invoice"].get("ksef_number")
+                invoice_data["internal_number"] = invoice_data.get("internal_number") or parsed["invoice"].get("number")
+                invoice_data["contractor_name"] = invoice_data.get("contractor_name") or parsed["seller"].get("name")
+                invoice_data["contractor_nip"] = invoice_data.get("contractor_nip") or parsed["seller"].get("nip")
+                invoice_data["currency"] = invoice_data.get("currency") or parsed["invoice"].get("currency")
+                invoice_data["net_amount"] = invoice_data.get("net_amount") or parsed["totals"].get("net")
+                invoice_data["vat_amount"] = invoice_data.get("vat_amount") or parsed["totals"].get("vat")
+                invoice_data["gross_amount"] = invoice_data.get("gross_amount") or parsed["totals"].get("gross")
+            except ValueError as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid KSeF XML: {exc}",
+                )
         
         for dt_field in ("issue_date", "due_date", "payment_date"):
             if invoice_data.get(dt_field) and invoice_data[dt_field].tzinfo:
@@ -106,6 +126,24 @@ async def create_invoices_bulk(
     try:
         for inv_schema in invoices:
             inv_data = inv_schema.model_dump(exclude_unset=True)
+
+            if inv_data.get("ksef_xml"):
+                try:
+                    parsed = parse_fa3_xml(inv_data["ksef_xml"])
+                    inv_data["parsed_data"] = parsed
+                    inv_data["ksef_number"] = inv_data.get("ksef_number") or parsed["invoice"].get("ksef_number")
+                    inv_data["internal_number"] = inv_data.get("internal_number") or parsed["invoice"].get("number")
+                    inv_data["contractor_name"] = inv_data.get("contractor_name") or parsed["seller"].get("name")
+                    inv_data["contractor_nip"] = inv_data.get("contractor_nip") or parsed["seller"].get("nip")
+                    inv_data["currency"] = inv_data.get("currency") or parsed["invoice"].get("currency")
+                    inv_data["net_amount"] = inv_data.get("net_amount") or parsed["totals"].get("net")
+                    inv_data["vat_amount"] = inv_data.get("vat_amount") or parsed["totals"].get("vat")
+                    inv_data["gross_amount"] = inv_data.get("gross_amount") or parsed["totals"].get("gross")
+                except ValueError as exc:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Invalid KSeF XML in bulk payload: {exc}",
+                    )
 
             for dt_field in ("issue_date", "due_date", "payment_date"):
                 if inv_data.get(dt_field) and inv_data[dt_field].tzinfo:

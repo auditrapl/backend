@@ -245,6 +245,23 @@ class BillingInvoice(AsyncAttrs, Base):
     user: Mapped["User"] = relationship("User", back_populates="billing_invoices")
     subscription: Mapped["BillingSubscription"] = relationship("BillingSubscription", back_populates="invoices")
 
+
+class StripeWebhookEventLog(AsyncAttrs, Base):
+    __tablename__ = "stripe_webhook_event_logs"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    event_id: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
+    event_type: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    company_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("companies.id"), nullable=True, index=True)
+    status: Mapped[str] = mapped_column(String, nullable=False, default="received")
+    customer_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    payload: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    received_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    processed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    company: Mapped["Company"] = relationship("Company")
+
 class Invoice(AsyncAttrs, Base):
     __tablename__ = "invoices"
 

@@ -97,6 +97,7 @@ app.include_router(cfo.router, prefix="/api/cfo", tags=["Major CFO API"])
 app.include_router(context_router.router, prefix="/api/context", tags=["Context Management API"])
 app.include_router(cashflow.router, prefix="/api/cashflow", tags=["Cashflow API"])
 app.include_router(billing.router, prefix="/billing", tags=["Billing API"])
+app.add_api_route("/api/webhooks/stripe", billing.stripe_webhook, methods=["POST"], tags=["Billing API"])
 
 @app.get("/")
 async def root(_: dict = Depends(verify_token)):

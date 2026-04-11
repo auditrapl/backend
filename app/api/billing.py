@@ -14,7 +14,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user
 from app.auth import verify_token
 from app.database import get_db
-from app.models import BillingInvoice, BillingPayment, BillingPlan, BillingSubscription, Company, User
+from app.models import (
+    BillingInvoice,
+    BillingPayment,
+    BillingPlan,
+    BillingSubscription,
+    Company,
+    StripeWebhookEventLog,
+    User,
+)
 from app.schemas import (
     BillingCheckoutRequest,
     BillingCheckoutResponse,
@@ -503,8 +511,35 @@ async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid webhook signature")
 
     event_payload = json.loads(payload.decode("utf-8"))
+    event_id = event_payload.get("id")
     event_type = event_payload.get("type")
     data_object = event_payload.get("data", {}).get("object", {})
+    customer_id = data_object.get("customer") if isinstance(data_object, dict) else None
+
+    if not event_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing Stripe event id")
+
+    existing_log_result = await db.execute(
+        select(StripeWebhookEventLog).where(StripeWebhookEventLog.event_id == event_id)
+    )
+    existing_log = existing_log_result.scalar_one_or_none()
+    if existing_log:
+        logger.info("Stripe webhook duplicate ignored: id=%s type=%s", event_id, event_type)
+        return {"received": True, "event_type": event_type, "duplicate": True}
+
+    webhook_log = StripeWebhookEventLog(
+        event_id=event_id,
+        event_type=event_type or "unknown",
+        customer_id=customer_id,
+        status="received",
+        payload={
+            "id": event_id,
+            "type": event_type,
+            "created": event_payload.get("created"),
+            "livemode": event_payload.get("livemode"),
+        },
+    )
+    db.add(webhook_log)
 
     supported_events = {
         "checkout.session.completed",
@@ -516,16 +551,20 @@ async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     }
 
     if event_type not in supported_events:
+        webhook_log.status = "ignored"
+        webhook_log.processed_at = datetime.now(UTC)
+        await db.commit()
         logger.info("Stripe webhook ignored (unsupported event): %s", event_type)
         return {"received": True, "event_type": event_type, "ignored": True}
 
     company: Company | None = None
     event_user: User | None = None
-    customer_id = data_object.get("customer") if isinstance(data_object, dict) else None
 
     if customer_id:
         result = await db.execute(select(Company).where(Company.stripe_customer_id == customer_id))
         company = result.scalar_one_or_none()
+        if company:
+            webhook_log.company_id = company.id
 
     if event_type == "checkout.session.completed":
         customer_id = data_object.get("customer") if isinstance(data_object, dict) else None
@@ -550,6 +589,7 @@ async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
                     company = result.scalar_one_or_none()
                     if company:
                         company.stripe_customer_id = customer_id
+                        webhook_log.company_id = company.id
                 except ValueError:
                     logger.warning("Invalid company_id in Stripe metadata: %s", metadata_company_id)
 
@@ -599,9 +639,18 @@ async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
             event_user = await find_company_user_by_customer_id(db, company, customer_id)
             await upsert_billing_invoice_and_payment(db, company=company, user=event_user, invoice_payload=data_object)
 
+    webhook_log.status = "processed"
+    webhook_log.processed_at = datetime.now(UTC)
+
     if company:
         db.add(company)
-        await db.commit()
+    db.add(webhook_log)
+    await db.commit()
 
-    logger.info("Stripe webhook handled: %s", event_type)
-    return {"received": True, "event_type": event_type}
+    logger.info(
+        "Stripe webhook handled: id=%s type=%s company_id=%s",
+        event_id,
+        event_type,
+        str(company.id) if company else None,
+    )
+    return {"received": True, "event_id": event_id, "event_type": event_type}
