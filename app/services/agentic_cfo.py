@@ -15,6 +15,25 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+
+def _sanitize_error(e: Exception) -> str:
+    """Map raw API/infra errors to user-friendly Polish messages. Never leak internals."""
+    err = str(e).lower()
+    if "429" in err or "resource_exhausted" in err or "quota" in err or "rate" in err:
+        return "Serwer AI jest chwilowo przeciążony. Spróbuj ponownie za kilka minut."
+    if "timeout" in err or "deadline" in err:
+        return "Analiza trwała zbyt długo. Spróbuj ponownie lub uprość pytanie."
+    if "500" in err or "internal" in err:
+        return "Wystąpił tymczasowy błąd serwera AI. Spróbuj ponownie za chwilę."
+    if "401" in err or "403" in err or "permission" in err or "auth" in err:
+        return "Problem z autoryzacją usługi AI. Skontaktuj się z supportem."
+    if "connection" in err or "network" in err or "dns" in err:
+        return "Problem z połączeniem do serwera AI. Sprawdź połączenie internetowe."
+    if "pusta odpowiedź" in err or "empty" in err:
+        return "AI nie wygenerował odpowiedzi. Spróbuj przeformułować pytanie."
+    return "Nie udało się wygenerować analizy. Spróbuj ponownie."
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # AFC CONFIG — Explicit. No silent black-box behavior.
 # SDK v1.62.0: AFC is enabled by default for Python callables, but we make it
@@ -560,7 +579,8 @@ async def agentic_cfo_stream(
 
         except Exception as e:
             logger.error(f"[AGENT_ERROR] instant: {e}", exc_info=True)
-            yield json.dumps({"status": "error", "message": f"Błąd szybkiej odpowiedzi: {e}"})
+            logger.error(f"[INSTANT_ERROR] {e}", exc_info=True)
+            yield json.dumps({"status": "error", "message": _sanitize_error(e)})
             return
 
     elif triage.route == "analysis":
@@ -776,4 +796,4 @@ async def agentic_cfo_stream(
                 await asyncio.sleep(0.5)
             else:
                 logger.error(f"[SYNTHESIS_ERROR] All models failed. Last: {e}", exc_info=True)
-                yield json.dumps({"status": "error", "message": f"Błąd syntezy Major CFO: {e}"})
+                yield json.dumps({"status": "error", "message": _sanitize_error(e)})
