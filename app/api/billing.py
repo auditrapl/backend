@@ -3,6 +3,8 @@ import os
 import uuid
 import json
 from datetime import UTC, datetime
+from decimal import Decimal
+from typing import Any
 
 import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -12,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user
 from app.auth import verify_token
 from app.database import get_db
-from app.models import BillingPlan, Company, User
+from app.models import BillingInvoice, BillingPayment, BillingPlan, BillingSubscription, Company, User
 from app.schemas import (
     BillingCheckoutRequest,
     BillingCheckoutResponse,
@@ -83,6 +85,164 @@ async def get_user_company(db: AsyncSession, current_user: User) -> Company:
     return ensure_company_or_400(current_user, company)
 
 
+def extract_subscription_price_id(subscription: Any) -> str | None:
+    items = subscription.get("items", {}) if hasattr(subscription, "get") else {}
+    item_data = items.get("data", []) if hasattr(items, "get") else []
+    if not item_data:
+        return None
+    first_item = item_data[0]
+    price = first_item.get("price", {}) if hasattr(first_item, "get") else {}
+    return price.get("id") if hasattr(price, "get") else None
+
+
+async def upsert_billing_subscription(
+    db: AsyncSession,
+    *,
+    company: Company,
+    user: User | None,
+    subscription: Any,
+) -> BillingSubscription | None:
+    stripe_subscription_id = subscription.get("id") if hasattr(subscription, "get") else None
+    if not stripe_subscription_id:
+        return None
+
+    existing = await db.execute(
+        select(BillingSubscription).where(BillingSubscription.stripe_subscription_id == stripe_subscription_id)
+    )
+    subscription_record = existing.scalar_one_or_none()
+    if not subscription_record:
+        subscription_record = BillingSubscription(
+            company_id=company.id,
+            user_id=user.id if user else None,
+            stripe_subscription_id=stripe_subscription_id,
+            stripe_customer_id=(subscription.get("customer") or company.stripe_customer_id or ""),
+        )
+
+    price_id = extract_subscription_price_id(subscription)
+    plan_id = None
+    if price_id:
+        plan_result = await db.execute(select(BillingPlan).where(BillingPlan.stripe_price_id == price_id))
+        plan = plan_result.scalar_one_or_none()
+        plan_id = plan.id if plan else None
+
+    subscription_record.company_id = company.id
+    subscription_record.user_id = user.id if user else subscription_record.user_id
+    subscription_record.plan_id = plan_id
+    subscription_record.stripe_customer_id = subscription.get("customer") or subscription_record.stripe_customer_id
+    subscription_record.status = subscription.get("status") or subscription_record.status
+    subscription_record.current_period_start = from_unix(subscription.get("current_period_start"))
+    subscription_record.current_period_end = from_unix(subscription.get("current_period_end"))
+    subscription_record.cancel_at_period_end = bool(subscription.get("cancel_at_period_end"))
+    subscription_record.canceled_at = from_unix(subscription.get("canceled_at"))
+    subscription_record.trial_end = from_unix(subscription.get("trial_end"))
+
+    db.add(subscription_record)
+    return subscription_record
+
+
+async def upsert_billing_invoice_and_payment(
+    db: AsyncSession,
+    *,
+    company: Company,
+    user: User | None,
+    invoice_payload: Any,
+) -> BillingInvoice | None:
+    stripe_invoice_id = invoice_payload.get("id") if hasattr(invoice_payload, "get") else None
+    if not stripe_invoice_id:
+        return None
+
+    existing_invoice = await db.execute(
+        select(BillingInvoice).where(BillingInvoice.stripe_invoice_id == stripe_invoice_id)
+    )
+    invoice_record = existing_invoice.scalar_one_or_none()
+    if not invoice_record:
+        invoice_record = BillingInvoice(
+            company_id=company.id,
+            user_id=user.id if user else None,
+            stripe_invoice_id=stripe_invoice_id,
+        )
+
+    subscription_ref = invoice_payload.get("subscription")
+    subscription_id = None
+    if subscription_ref:
+        subscription_result = await db.execute(
+            select(BillingSubscription).where(BillingSubscription.stripe_subscription_id == subscription_ref)
+        )
+        subscription_record = subscription_result.scalar_one_or_none()
+        subscription_id = subscription_record.id if subscription_record else None
+
+    status_transitions = invoice_payload.get("status_transitions", {}) if hasattr(invoice_payload, "get") else {}
+
+    invoice_record.company_id = company.id
+    invoice_record.user_id = user.id if user else invoice_record.user_id
+    invoice_record.subscription_id = subscription_id
+    invoice_record.number = invoice_payload.get("number")
+    invoice_record.status = invoice_payload.get("status") or invoice_record.status
+    invoice_record.amount_due = to_decimal_from_cents(invoice_payload.get("amount_due"))
+    invoice_record.amount_paid = to_decimal_from_cents(invoice_payload.get("amount_paid"))
+    invoice_record.currency = (invoice_payload.get("currency") or "USD").upper()
+    invoice_record.invoice_pdf_url = invoice_payload.get("invoice_pdf")
+    invoice_record.hosted_invoice_url = invoice_payload.get("hosted_invoice_url")
+    invoice_record.period_start = from_unix(invoice_payload.get("period_start"))
+    invoice_record.period_end = from_unix(invoice_payload.get("period_end"))
+    invoice_record.due_date = from_unix(invoice_payload.get("due_date"))
+    invoice_record.paid_at = from_unix(status_transitions.get("paid_at"))
+
+    db.add(invoice_record)
+
+    payment_intent_id = invoice_payload.get("payment_intent")
+    payment_record = None
+    if payment_intent_id:
+        payment_result = await db.execute(
+            select(BillingPayment).where(BillingPayment.stripe_payment_intent_id == payment_intent_id)
+        )
+        payment_record = payment_result.scalar_one_or_none()
+    else:
+        payment_result = await db.execute(
+            select(BillingPayment).where(BillingPayment.stripe_invoice_id == stripe_invoice_id)
+        )
+        payment_record = payment_result.scalar_one_or_none()
+
+    if not payment_record:
+        payment_record = BillingPayment(
+            company_id=company.id,
+            user_id=user.id if user else None,
+            subscription_id=subscription_id,
+            amount=Decimal("0.00"),
+        )
+
+    amount_paid = to_decimal_from_cents(invoice_payload.get("amount_paid"))
+    amount_due = to_decimal_from_cents(invoice_payload.get("amount_due"))
+
+    payment_record.company_id = company.id
+    payment_record.user_id = user.id if user else payment_record.user_id
+    payment_record.subscription_id = subscription_id
+    payment_record.stripe_invoice_id = stripe_invoice_id
+    payment_record.stripe_payment_intent_id = payment_intent_id
+    payment_record.amount = amount_paid or amount_due or Decimal("0.00")
+    payment_record.currency = (invoice_payload.get("currency") or "USD").upper()
+    payment_record.status = invoice_payload.get("status") or payment_record.status
+    payment_record.paid_at = from_unix(status_transitions.get("paid_at"))
+    payment_record.failure_message = (
+        invoice_payload.get("last_finalization_error", {}) or {}
+    ).get("message")
+
+    db.add(payment_record)
+    return invoice_record
+
+
+async def find_company_user_by_customer_id(db: AsyncSession, company: Company, stripe_customer_id: str | None) -> User | None:
+    if not stripe_customer_id:
+        return None
+    user_result = await db.execute(
+        select(User).where(
+            User.company_id == company.id,
+            User.stripe_customer_id == stripe_customer_id,
+        )
+    )
+    return user_result.scalar_one_or_none()
+
+
 @router.post(
     "/checkout-session",
     response_model=BillingCheckoutResponse,
@@ -104,6 +264,31 @@ async def create_billing_checkout_session(
             detail="Missing Stripe price id",
         )
 
+    plan_result = await db.execute(
+        select(BillingPlan).where(
+            BillingPlan.stripe_price_id == chosen_price_id,
+            BillingPlan.is_active.is_(True),
+        )
+    )
+    chosen_plan = plan_result.scalar_one_or_none()
+    if not chosen_plan:
+        try:
+            await sync_stripe_products_and_prices(db)
+        except StripeServiceError as exc:
+            raise_stripe_http_error(exc)
+        plan_result = await db.execute(
+            select(BillingPlan).where(
+                BillingPlan.stripe_price_id == chosen_price_id,
+                BillingPlan.is_active.is_(True),
+            )
+        )
+        chosen_plan = plan_result.scalar_one_or_none()
+    if not chosen_plan:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Selected Stripe price is not available",
+        )
+
     default_success, default_cancel = default_checkout_urls()
     success_url = payload.success_url or default_success
     cancel_url = payload.cancel_url or default_cancel
@@ -114,6 +299,8 @@ async def create_billing_checkout_session(
         raise_stripe_http_error(exc)
     if not company.stripe_customer_id:
         company.stripe_customer_id = customer_id
+    current_user.stripe_customer_id = customer_id
+    db.add(current_user)
 
     session = create_checkout_session(
         company=company,
@@ -202,6 +389,9 @@ async def get_billing_status(
         except StripeServiceError as exc:
             raise_stripe_http_error(exc)
         apply_subscription_to_company(company, subscription)
+        await upsert_billing_subscription(db, company=company, user=current_user, subscription=subscription)
+        current_user.stripe_subscription_id = company.stripe_subscription_id
+        db.add(current_user)
 
         try:
             upcoming = retrieve_upcoming_invoice(company.stripe_customer_id)
@@ -330,6 +520,7 @@ async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
         return {"received": True, "event_type": event_type, "ignored": True}
 
     company: Company | None = None
+    event_user: User | None = None
     customer_id = data_object.get("customer") if isinstance(data_object, dict) else None
 
     if customer_id:
@@ -339,8 +530,18 @@ async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     if event_type == "checkout.session.completed":
         customer_id = data_object.get("customer") if isinstance(data_object, dict) else None
         subscription_id = data_object.get("subscription") if isinstance(data_object, dict) else None
+        metadata = data_object.get("metadata", {}) if isinstance(data_object, dict) else {}
+        metadata_user_id = metadata.get("user_id") if isinstance(metadata, dict) else None
+
+        if metadata_user_id:
+            try:
+                parsed_user_id = uuid.UUID(metadata_user_id)
+                user_result = await db.execute(select(User).where(User.id == parsed_user_id))
+                event_user = user_result.scalar_one_or_none()
+            except ValueError:
+                logger.warning("Invalid user_id in Stripe metadata: %s", metadata_user_id)
+
         if customer_id and not company:
-            metadata = data_object.get("metadata", {}) if isinstance(data_object, dict) else {}
             metadata_company_id = metadata.get("company_id") if isinstance(metadata, dict) else None
             if metadata_company_id:
                 try:
@@ -358,23 +559,45 @@ async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
             except StripeServiceError as exc:
                 raise_stripe_http_error(exc)
             apply_subscription_to_company(company, subscription)
+            if not event_user:
+                event_user = await find_company_user_by_customer_id(db, company, customer_id)
+            await upsert_billing_subscription(db, company=company, user=event_user, subscription=subscription)
+            if event_user:
+                event_user.stripe_customer_id = customer_id
+                event_user.stripe_subscription_id = subscription_id
+                db.add(event_user)
         elif company and subscription_id and not stripe_available:
             company.stripe_subscription_id = subscription_id
             company.billing_last_event_at = datetime.now(UTC)
+            if not event_user:
+                event_user = await find_company_user_by_customer_id(db, company, customer_id)
+            if event_user:
+                event_user.stripe_customer_id = customer_id
+                event_user.stripe_subscription_id = subscription_id
+                db.add(event_user)
 
     elif event_type in {"customer.subscription.created", "customer.subscription.updated", "customer.subscription.deleted"}:
         if company:
+            event_user = await find_company_user_by_customer_id(db, company, customer_id)
             apply_subscription_to_company(company, data_object)
+            await upsert_billing_subscription(db, company=company, user=event_user, subscription=data_object)
+            if event_user and company.stripe_subscription_id:
+                event_user.stripe_subscription_id = company.stripe_subscription_id
+                db.add(event_user)
 
     elif event_type == "invoice.paid":
         if company:
             company.billing_status = "active"
             company.billing_last_event_at = datetime.now(UTC)
+            event_user = await find_company_user_by_customer_id(db, company, customer_id)
+            await upsert_billing_invoice_and_payment(db, company=company, user=event_user, invoice_payload=data_object)
 
     elif event_type == "invoice.payment_failed":
         if company:
             company.billing_status = "past_due"
             company.billing_last_event_at = datetime.now(UTC)
+            event_user = await find_company_user_by_customer_id(db, company, customer_id)
+            await upsert_billing_invoice_and_payment(db, company=company, user=event_user, invoice_payload=data_object)
 
     if company:
         db.add(company)

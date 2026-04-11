@@ -16,6 +16,7 @@ from app.services.context_operational import refresh_safecash_background
 router = APIRouter(tags=["invoices"], dependencies=[Depends(verify_token)])
 
 @router.get("", response_model=dict)
+@router.get("/", response_model=dict, include_in_schema=False)
 async def get_invoices(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -32,6 +33,7 @@ async def get_invoices(
     return {"invoices": [InvoiceResponse.model_validate(inv).model_dump() for inv in invoices]}
 
 @router.post("", response_model=InvoiceResponse, status_code=201)
+@router.post("/", response_model=InvoiceResponse, status_code=201, include_in_schema=False)
 async def create_invoice(
     invoice: InvoiceCreate,
     background_tasks: BackgroundTasks,

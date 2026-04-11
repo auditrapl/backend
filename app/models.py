@@ -184,8 +184,8 @@ class BillingSubscription(AsyncAttrs, Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     company: Mapped["Company"] = relationship("Company", back_populates="billing_subscriptions")
-    user: Mapped["User" | None] = relationship("User", back_populates="billing_subscriptions")
-    plan: Mapped["BillingPlan" | None] = relationship("BillingPlan", back_populates="subscriptions")
+    user: Mapped["User"] = relationship("User", back_populates="billing_subscriptions")
+    plan: Mapped["BillingPlan"] = relationship("BillingPlan", back_populates="subscriptions")
     payments: Mapped[list["BillingPayment"]] = relationship(
         "BillingPayment",
         back_populates="subscription",
@@ -215,8 +215,8 @@ class BillingPayment(AsyncAttrs, Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     company: Mapped["Company"] = relationship("Company", back_populates="billing_payments")
-    user: Mapped["User" | None] = relationship("User", back_populates="billing_payments")
-    subscription: Mapped["BillingSubscription" | None] = relationship("BillingSubscription", back_populates="payments")
+    user: Mapped["User"] = relationship("User", back_populates="billing_payments")
+    subscription: Mapped["BillingSubscription"] = relationship("BillingSubscription", back_populates="payments")
 
 
 class BillingInvoice(AsyncAttrs, Base):
@@ -242,8 +242,8 @@ class BillingInvoice(AsyncAttrs, Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     company: Mapped["Company"] = relationship("Company", back_populates="billing_invoices")
-    user: Mapped["User" | None] = relationship("User", back_populates="billing_invoices")
-    subscription: Mapped["BillingSubscription" | None] = relationship("BillingSubscription", back_populates="invoices")
+    user: Mapped["User"] = relationship("User", back_populates="billing_invoices")
+    subscription: Mapped["BillingSubscription"] = relationship("BillingSubscription", back_populates="invoices")
 
 class Invoice(AsyncAttrs, Base):
     __tablename__ = "invoices"
