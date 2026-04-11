@@ -717,13 +717,14 @@ async def agentic_cfo_stream(
     )
 
     # Retry logic — Gemini czasem zwraca pusty response lub niedokończony function_call
-    MAX_SYNTHESIS_RETRIES = 2
+    SYNTHESIS_MODELS = ["gemini-3.1-pro-preview", "gemini-2.5-flash"]
     last_error = None
 
-    for attempt in range(1, MAX_SYNTHESIS_RETRIES + 1):
+    for model_name in SYNTHESIS_MODELS:
         try:
+            logger.info(f"[SYNTHESIS] Trying model: {model_name}")
             final_res = await client.aio.models.generate_content(
-                model="gemini-3.1-pro-preview",
+                model=model_name,
                 contents=final_prompt,
                 config=types.GenerateContentConfig(
                     system_instruction=MAJOR_CFO_PROMPT,
@@ -734,7 +735,7 @@ async def agentic_cfo_stream(
             )
 
             if not final_res.text or len(final_res.text.strip()) < 10:
-                raise ValueError(f"Pusta odpowiedź Gemini (attempt {attempt}): '{final_res.text[:50] if final_res.text else 'None'}'")
+                raise ValueError(f"Pusta odpowiedź Gemini ({model_name}): '{final_res.text[:50] if final_res.text else 'None'}'")
 
             final_data = MajorCfoOutput.model_validate_json(final_res.text)
 
@@ -767,9 +768,12 @@ async def agentic_cfo_stream(
 
         except Exception as e:
             last_error = e
-            if attempt < MAX_SYNTHESIS_RETRIES:
-                logger.warning(f"[SYNTHESIS_RETRY] Attempt {attempt}/{MAX_SYNTHESIS_RETRIES} failed: {e}. Retrying...")
-                await asyncio.sleep(1)
+            is_quota = "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e) or "quota" in str(e).lower()
+            if model_name != SYNTHESIS_MODELS[-1]:
+                logger.warning(f"[SYNTHESIS_FALLBACK] {model_name} failed ({e}). Falling back to next model...")
+                if is_quota:
+                    yield json.dumps({"status": "progress", "type": "phase_update", "phase": "synthesis", "detail": f"Limit {model_name} — przełączam na zapasowy model..."})
+                await asyncio.sleep(0.5)
             else:
-                logger.error(f"[SYNTHESIS_ERROR] Major CFO failed after {MAX_SYNTHESIS_RETRIES} attempts: {e}", exc_info=True)
+                logger.error(f"[SYNTHESIS_ERROR] All models failed. Last: {e}", exc_info=True)
                 yield json.dumps({"status": "error", "message": f"Błąd syntezy Major CFO: {e}"})
