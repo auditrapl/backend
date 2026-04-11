@@ -636,6 +636,15 @@ class BillingPlanSyncResponse(BaseModel):
     synced_count: int
 
 
+class PublicCheckoutRequest(BaseModel):
+    email: EmailStr
+    price_id: Optional[str] = None
+
+
+class PublicCheckoutResponse(BaseModel):
+    checkout_url: str
+
+
 class DocumentSummaryOutput(BaseModel):
     """Schema wymuszająca na gemini-2.5-flash zwrócenie skompresowanych faktów finansowych z dokumentu."""
     typ_dokumentu: str = Field(

@@ -173,3 +173,62 @@ def send_briefing_email(
     except Exception as e:
         logger.error(f"[Email] Failed to send to {to_email}: {e}", exc_info=True)
         return False
+
+
+def send_welcome_email(
+    to_email: str,
+    dashboard_url: str = "https://app.auditra.pl/dashboard",
+) -> bool:
+    """Send welcome email after auto-provisioning from Stripe checkout."""
+    if not resend.api_key:
+        logger.warning("[Email] RESEND_API_KEY not set — skipping welcome email")
+        return False
+
+    html = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<div style="max-width:560px;margin:0 auto;padding:48px 24px;">
+    <div style="font-size:18px;font-weight:700;color:#111827;margin-bottom:32px;">auditra</div>
+    <div style="height:1px;background:#f3f4f6;margin-bottom:32px;"></div>
+
+    <h1 style="font-size:24px;font-weight:700;color:#111827;margin:0 0 16px;">Witaj w Auditra!</h1>
+    <p style="font-size:15px;color:#374151;line-height:1.7;">
+        Twoja subskrypcja jest aktywna. Za chwile otrzymasz od Supabase email z linkiem do ustawienia hasla.
+    </p>
+    <p style="font-size:15px;color:#374151;line-height:1.7;">
+        Po ustawieniu hasla, zaloguj sie i skonfiguruj firme:
+    </p>
+
+    <div style="text-align:center;margin:36px 0;">
+        <a href="{dashboard_url}" style="display:inline-block;background:#1D9E75;color:#ffffff;padding:14px 40px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600;">Przejdz do dashboardu</a>
+    </div>
+
+    <div style="background:#f0fdf4;border-radius:12px;padding:20px;margin-bottom:24px;">
+        <p style="font-size:13px;color:#166534;margin:0;font-weight:600;">Co dalej?</p>
+        <ol style="font-size:13px;color:#374151;line-height:1.8;margin:8px 0 0;padding-left:20px;">
+            <li>Ustaw haslo (email od Supabase)</li>
+            <li>Zaloguj sie do dashboardu</li>
+            <li>Uzupelnij dane firmy (NIP, forma prawna)</li>
+            <li>Wgraj faktury CSV lub podlacz KSeF</li>
+        </ol>
+    </div>
+
+    <div style="height:1px;background:#f3f4f6;margin-bottom:24px;"></div>
+    <div style="font-size:11px;color:#d1d5db;">auditra.pl &middot; AI Dyrektor Finansowy</div>
+</div>
+</body>
+</html>"""
+
+    try:
+        result = resend.Emails.send({
+            "from": f"Auditra <{FROM_EMAIL}>",
+            "to": [to_email],
+            "subject": "Witaj w Auditra! Ustaw haslo i zacznij.",
+            "html": html,
+        })
+        logger.info(f"[Email] Welcome email sent to {to_email}")
+        return True
+    except Exception as e:
+        logger.error(f"[Email] Failed welcome email to {to_email}: {e}")
+        return False

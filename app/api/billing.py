@@ -33,10 +33,13 @@ from app.schemas import (
     BillingPortalRequest,
     BillingPortalResponse,
     BillingStatusResponse,
+    PublicCheckoutRequest,
+    PublicCheckoutResponse,
 )
 from app.services.stripe_billing import (
     StripeServiceError,
     apply_subscription_to_company,
+    configure_stripe,
     construct_webhook_event,
     create_checkout_session,
     create_portal_session,
@@ -491,6 +494,45 @@ async def sync_billing_plans(
     return BillingPlanSyncResponse(synced_count=synced_count)
 
 
+@router.post("/public-checkout", response_model=PublicCheckoutResponse)
+async def public_checkout(
+    payload: PublicCheckoutRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Public checkout — no auth required. Creates Stripe Checkout with email."""
+    ensure_billing_ready()
+
+    chosen_price_id = payload.price_id or default_price_id()
+    if not chosen_price_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing price_id",
+        )
+
+    frontend = os.getenv("FRONTEND_APP_URL", "http://localhost:3000")
+    success_url = f"{frontend}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}"
+    cancel_url = f"{frontend}/checkout?canceled=true"
+
+    try:
+        configure_stripe()
+        session = stripe.checkout.Session.create(
+            customer_email=payload.email,
+            mode="subscription",
+            line_items=[{"price": chosen_price_id, "quantity": 1}],
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata={"source": "public_checkout", "email": payload.email},
+            allow_promotion_codes=True,
+        )
+    except stripe.error.StripeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(exc),
+        )
+
+    return PublicCheckoutResponse(checkout_url=session.url)
+
+
 @router.post("/webhook")
 async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     stripe_available = stripe_is_configured()
@@ -615,6 +657,27 @@ async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
                 event_user.stripe_customer_id = customer_id
                 event_user.stripe_subscription_id = subscription_id
                 db.add(event_user)
+
+        # If no company found (public checkout), auto-provision
+        if not company and customer_id:
+            checkout_email = data_object.get("customer_email") or data_object.get("customer_details", {}).get("email")
+            subscription_id_for_provision = data_object.get("subscription")
+            checkout_metadata = data_object.get("metadata", {})
+
+            if checkout_email and isinstance(checkout_metadata, dict) and checkout_metadata.get("source") == "public_checkout":
+                from app.services.account_provisioning import provision_account_after_payment
+
+                try:
+                    event_user, company = await provision_account_after_payment(
+                        db=db,
+                        email=checkout_email,
+                        stripe_customer_id=customer_id,
+                        stripe_subscription_id=subscription_id_for_provision,
+                    )
+                    webhook_log.company_id = company.id
+                    logger.info("[Webhook] Auto-provisioned account for %s", checkout_email)
+                except Exception as e:
+                    logger.error("[Webhook] Auto-provision failed for %s: %s", checkout_email, e)
 
     elif event_type in {"customer.subscription.created", "customer.subscription.updated", "customer.subscription.deleted"}:
         if company:
