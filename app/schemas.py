@@ -30,6 +30,16 @@ class CompanyResponse(BaseModel):
     vat_status: Optional[str] = None
     employee_count: Optional[int] = None
     zus_type: Optional[str] = None
+    stripe_customer_id: Optional[str] = None
+    stripe_subscription_id: Optional[str] = None
+    stripe_price_id: Optional[str] = None
+    billing_status: str = "inactive"
+    billing_currency: Optional[str] = None
+    billing_interval: Optional[str] = None
+    billing_amount: Optional[Decimal] = None
+    billing_current_period_end: Optional[datetime] = None
+    billing_cancel_at_period_end: bool = False
+    billing_last_event_at: Optional[datetime] = None
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
 
@@ -74,6 +84,8 @@ class UserResponse(BaseModel):
     id: UUID
     email: str
     company_id: Optional[UUID]
+    stripe_customer_id: Optional[str] = None
+    stripe_subscription_id: Optional[str] = None
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
 
@@ -553,6 +565,75 @@ class ConversationWithMessages(BaseModel):
     updated_at: datetime
     messages: list[MessageResponse]
     model_config = ConfigDict(from_attributes=True)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# BILLING / STRIPE
+# ─────────────────────────────────────────────────────────────────────────────
+
+class BillingCheckoutRequest(BaseModel):
+    price_id: Optional[str] = None
+    success_url: Optional[str] = None
+    cancel_url: Optional[str] = None
+
+
+class BillingCheckoutResponse(BaseModel):
+    session_id: str
+    checkout_url: str
+
+
+class BillingPortalRequest(BaseModel):
+    return_url: Optional[str] = None
+
+
+class BillingPortalResponse(BaseModel):
+    portal_url: str
+
+
+class BillingInvoiceItem(BaseModel):
+    id: str
+    number: Optional[str] = None
+    status: Optional[str] = None
+    amount_paid: Decimal
+    currency: str
+    created_at: datetime
+    invoice_pdf_url: Optional[str] = None
+    hosted_invoice_url: Optional[str] = None
+
+
+class BillingStatusResponse(BaseModel):
+    stripe_customer_id: Optional[str] = None
+    stripe_subscription_id: Optional[str] = None
+    price_id: Optional[str] = None
+    status: str = "inactive"
+    currency: Optional[str] = None
+    interval: Optional[str] = None
+    amount: Optional[Decimal] = None
+    cancel_at_period_end: bool = False
+    current_period_end: Optional[datetime] = None
+    next_charge_amount: Optional[Decimal] = None
+    next_charge_date: Optional[datetime] = None
+    invoices: list[BillingInvoiceItem] = Field(default_factory=list)
+
+
+class BillingPlanItemResponse(BaseModel):
+    stripe_product_id: str
+    stripe_price_id: str
+    name: str
+    description: Optional[str] = None
+    currency: str
+    interval: Optional[str] = None
+    interval_count: Optional[int] = None
+    amount: Optional[Decimal] = None
+    is_active: bool = True
+
+
+class BillingPlansResponse(BaseModel):
+    plans: list[BillingPlanItemResponse] = Field(default_factory=list)
+
+
+class BillingPlanSyncResponse(BaseModel):
+    synced_count: int
 
 
 class DocumentSummaryOutput(BaseModel):

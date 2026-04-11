@@ -5,7 +5,7 @@ from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from fastapi.responses import StreamingResponse
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_feature
 from app.auth import verify_token
 from app.database import get_db, AsyncSessionLocal
 from app.schemas import CfoRequest, CfoReport, UserResponse, SharedCfoReportCreate, SharedCfoReportResponse, ProactiveInsightResponse, MorningBriefingResponse
@@ -22,6 +22,7 @@ router = APIRouter(dependencies=[Depends(verify_token)])
 async def simulate_cfo_scenario(
     request: CfoRequest,
     background_tasks: BackgroundTasks,
+    _feature_gate: dict = Depends(require_feature("cfo.simulate")),
     current_user: UserResponse = Depends(get_current_user)
 ):
     """
@@ -64,6 +65,7 @@ async def simulate_cfo_scenario(
 @router.post("/share", response_model=SharedCfoReportResponse)
 async def share_cfo_report(
     request: SharedCfoReportCreate,
+    _feature_gate: dict = Depends(require_feature("cfo.share")),
     db: AsyncSession = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user)
 ):
