@@ -47,9 +47,18 @@ async def generate_briefing_for_company(
     operational = context_data.get("operational", {})
     has_identity = bool(canonical.get("company_identity", {}).get("name"))
     has_financials = bool(operational.get("live_financial_pulse", {}).get("mrr"))
+    # Fallback: jeśli context jest pusty ale firma ma faktury — i tak generuj.
+    # Tax_context enrichment poniżej wstrzyknie dane z faktur jako sygnał dla AI.
     if not has_identity and not has_financials:
-        logger.info(f"[NightShift] Skipping company {company_id}: no identity or financials in context")
-        return
+        from app.models import Invoice
+        from sqlalchemy import func as _func
+        inv_count_res = await db.execute(
+            select(_func.count(Invoice.id)).where(Invoice.company_id == company_id)
+        )
+        if (inv_count_res.scalar() or 0) == 0:
+            logger.info(f"[NightShift] Skipping company {company_id}: no identity, financials, nor invoices")
+            return
+        logger.info(f"[NightShift] Company {company_id}: empty context but has invoices — proceeding with tax_context")
 
     client = genai.Client()
 

@@ -167,8 +167,28 @@ async def generate_morning_briefing_manual(
     operational = ctx_data.get("operational", {})
     has_identity = bool(canonical.get("company_identity", {}).get("name"))
     has_financials = bool(operational.get("live_financial_pulse", {}).get("mrr"))
+
+    # Fallback: jeśli context jest pusty ale faktury istnieją w DB — i tak generuj.
+    # Briefing dostanie context_data z fakturami przez tax_context enrichment.
     if not has_identity and not has_financials:
-        raise HTTPException(status_code=400, detail="Za mało danych do wygenerowania briefingu. Dodaj dokumenty, faktury lub uzupełnij profil firmy.")
+        from app.models import Invoice, Company
+        from sqlalchemy import func as _func
+        inv_count_res = await db.execute(
+            select(_func.count(Invoice.id)).where(Invoice.company_id == company_uuid)
+        )
+        invoice_count = inv_count_res.scalar() or 0
+        company_res = await db.execute(select(Company).where(Company.id == company_uuid))
+        company_row = company_res.scalar_one_or_none()
+        company_name = getattr(company_row, "name", None)
+
+        if invoice_count == 0 and not company_name:
+            raise HTTPException(status_code=400, detail="Za mało danych do wygenerowania briefingu. Dodaj dokumenty, faktury lub uzupełnij profil firmy.")
+
+        # Wstrzykujemy minimalny canonical.company_identity z companies table
+        # żeby briefing miał skąd brać nazwę firmy.
+        if company_name:
+            ctx_data.setdefault("canonical", {}).setdefault("company_identity", {})["name"] = company_name
+            logger.info(f"[Briefing] Auto-injected company name '{company_name}' from companies table (context was empty)")
 
     # ── Generuj odprawę ──
     await generate_briefing_for_company(db, company_uuid, ctx_data)
