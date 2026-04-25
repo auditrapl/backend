@@ -85,6 +85,8 @@ _cors_env = os.getenv("CORS_ORIGINS", "")
 origins = [o.strip() for o in _cors_env.split(",") if o.strip()] if _cors_env else [
     "http://localhost:3000",
     "http://localhost:8000",
+    "https://auditra.pl",
+    "https://www.auditra.pl",
 ]
 
 app.add_middleware(
