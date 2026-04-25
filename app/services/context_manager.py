@@ -80,9 +80,9 @@ ZASADY:
 4. Definiuj ryzyka: Jeśli dokument wspomina, że 40% przychodów to jeden klient, dodaj to jako 'Wysoka koncentracja przychodów' z severity 'high'.
 5. Bądź zwięzły. Wyciągaj esencję."""
 
-    # Zastosowanie modelu wskazanego przez użytkownika (3.1 pro preview)
+    # Flash dla ekstrakcji — Pro zarezerwowany WYŁĄCZNIE dla CFO synthesis
     response = client.models.generate_content(
-        model='gemini-3.1-pro-preview',
+        model='gemini-2.5-flash',
         contents=document_text,
         config=types.GenerateContentConfig(
             system_instruction=system_instruction,
@@ -92,8 +92,9 @@ ZASADY:
         ),
     )
     
-    # Automatyczna walidacja typu (Pydantic <-> JSON)
-    return CompanyContext.model_validate_json(response.text)
+    # Automatyczna walidacja typu (Pydantic <-> JSON), defensywnie
+    from app.services._json_parse import safe_model_validate_json
+    return safe_model_validate_json(CompanyContext, response.text)
 
 
 # ==============================================================================

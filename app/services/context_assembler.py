@@ -70,6 +70,11 @@ def _format_canonical(ctx: CanonicalContext) -> str:
         sc_parts.append(f"Cel: {sc.primary_goal}")
     if sc.strategy:
         sc_parts.append(f"Strategia: {sc.strategy}")
+    # Add source annotation
+    sources = getattr(ctx, 'field_sources', None) or {}
+    sc_source = sources.get("strategic_compass")
+    if sc_source and hasattr(sc_source, 'origin'):
+        sc_parts.append(f"(zrodlo: {sc_source.origin})")
     lines.append(f"[Strategia] {' | '.join(sc_parts) if sc_parts else 'Brak danych'}")
 
     ue = ctx.unit_economics
@@ -97,9 +102,11 @@ def _format_operational(ctx: OperationalContext) -> str:
     p = ctx.live_financial_pulse
     pulse_parts = []
 
-    # SafeCash — priorytet, źródło prawdy z faktur
+    # SafeCash — priorytet, źródło prawdy z faktur (ale NIE saldo bankowe!)
     if p.safecash is not None:
-        pulse_parts.append(f"Gotówka (SafeCash z faktur): {_fmt(p.safecash, 'PLN')}")
+        pulse_parts.append(
+            f"SafeCash (szacunek z opłaconych faktur, NIE saldo bankowe): {_fmt(p.safecash, 'PLN')}"
+        )
     elif p.cash_on_hand is not None:
         pulse_parts.append(f"Gotówka (ręczna): {_fmt(p.cash_on_hand, 'PLN')}")
     # Gotówka deklarowana — parametr symulacyjny

@@ -1,0 +1,516 @@
+{
+  "started_at": "2026-04-19 13:50:30",
+  "results": [
+    {
+      "test_id": "P5-A",
+      "prompt": "Czy możemy otworzyć nowe biuro za 25 000 PLN miesięcznie?",
+      "duration_sec": 58.69,
+      "route": "strategic_debate",
+      "response_type": "dashboard",
+      "tool_calls": 0,
+      "tools_used": [],
+      "blocks": [
+        "metric_grid",
+        "alert_banner",
+        "text_card"
+      ],
+      "layout": [
+        {
+          "block_type": "metric_grid",
+          "title": "Kluczowe wskaźniki finansowe",
+          "subtitle": null,
+          "body": null,
+          "message": null,
+          "urgency": null,
+          "theme": null,
+          "chart_type": null,
+          "data": null,
+          "series_labels": null,
+          "metrics": [
+            {
+              "label": "Dostępna gotówka",
+              "value": "361 251 PLN",
+              "trend": null,
+              "trend_label": null,
+              "color": null
+            },
+            {
+              "label": "Gotówka po zobowiązaniach",
+              "value": "316 691 PLN",
+              "trend": null,
+              "trend_label": null,
+              "color": null
+            },
+            {
+              "label": "Nowy miesięczny burn rate",
+              "value": "194 371 PLN",
+              "trend": null,
+              "trend_label": null,
+              "color": null
+            },
+            {
+              "label": "Nowy miesięczny zysk netto",
+              "value": "86 069 PLN",
+              "trend": null,
+              "trend_label": null,
+              "color": null
+            }
+          ],
+          "steps": null,
+          "columns": null,
+          "rows": null,
+          "items": null,
+          "carousel_items": null,
+          "score": null,
+          "label": null,
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        },
+        {
+          "block_type": "alert_banner",
+          "title": null,
+          "subtitle": null,
+          "body": null,
+          "message": "Po uregulowaniu nadchodzących zobowiązań, bufor gotówkowy wystarczy na pokrycie operacji przez około **1.6 miesiąca** przy nowym poziomie kosztów. To niski poziom bezpieczeństwa.",
+          "urgency": "high",
+          "theme": "danger",
+          "chart_type": null,
+          "data": null,
+          "series_labels": null,
+          "metrics": null,
+          "steps": null,
+          "columns": null,
+          "rows": null,
+          "items": null,
+          "carousel_items": null,
+          "score": null,
+          "label": null,
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        },
+        {
+          "block_type": "text_card",
+          "title": "Analiza wpływu",
+          "subtitle": null,
+          "body": "Dodatkowy koszt **25 000 PLN/mies.** zwiększy miesięczny burn rate do **194 371 PLN**. Zysk netto, bazując na kwietniowych przychodach, wyniesie **86 069 PLN**.\n\nFirma generuje stały zysk, co pozwala na pokrycie nowego kosztu. Jednak wysoka koncentracja przychodów (Top 3 klienci: **61.8%**) stanowi ryzyko.\n\nInwestycja w biuro powinna być ściśle powiązana z celami strategicznymi, takimi jak rozwój produktu lub ekspansja DACH. Brak takiego powiązania obniży marżę i spowolni akumulację gotówki.",
+          "message": null,
+          "urgency": null,
+          "theme": null,
+          "chart_type": null,
+          "data": null,
+          "series_labels": null,
+          "metrics": null,
+          "steps": null,
+          "columns": null,
+          "rows": null,
+          "items": null,
+          "carousel_items": null,
+          "score": null,
+          "label": null,
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        }
+      ],
+      "hero_recommendation": "Otwarcie nowego biura za **25 000 PLN/mies.** jest finansowo możliwe, ale znacząco obniży bufor gotówkowy. Decyzja wymaga silnego uzasadnienia strategicznego i monitorowania zwrotu z inwestycji.",
+      "executive_summary": "Firma jest w stanie pokryć koszt nowego biura, utrzymując dodatni zysk netto. Jednakże, bieżąca płynność po uregulowaniu nadchodzących zobowiązań zapewnia pokrycie operacji na zaledwie **1.6 miesiąca**. Zwiększenie kosztów stałych wymaga ostrożności i bezpośredniego powiązania z celami strategicznymi.",
+      "message": null,
+      "errors": [],
+      "red_flags": [
+        {
+          "severity": "HIGH",
+          "type": "strategic_debate bez tool calls",
+          "detail": "Debata strategiczna bez zapytań do DB = halucynacja z pamięci."
+        }
+      ],
+      "cmp": {
+        "status": "ok",
+        "old_blocks": [
+          "alert_banner",
+          "data_table",
+          "metric_grid",
+          "text_card"
+        ],
+        "new_blocks": [
+          "alert_banner",
+          "metric_grid",
+          "text_card"
+        ],
+        "added": [],
+        "removed": [
+          "data_table"
+        ],
+        "old_hero": "Odrzuć propozycję wynajmu nowego biura. Pozycja gotówkowa netto wynosi -85 968 PLN, co oznacza techniczną niewypłacalność.",
+        "new_hero": "Otwarcie nowego biura za **25 000 PLN/mies.** jest finansowo możliwe, ale znacząco obniży bufor gotówkowy. Decyzja wymaga silnego uzasadnienia strategicznego i monitorowania zwrotu z inwestycji."
+      }
+    },
+    {
+      "test_id": "P5-B",
+      "prompt": "Porównaj scenariusz zatrudnienia 1 vs 3 nowych osób po 10 000 PLN każda.",
+      "duration_sec": 272.25,
+      "route": "strategic_debate",
+      "response_type": null,
+      "tool_calls": 0,
+      "tools_used": [],
+      "blocks": [],
+      "layout": [],
+      "hero_recommendation": null,
+      "executive_summary": null,
+      "message": null,
+      "errors": [
+        {
+          "status": "error",
+          "message": "Nie udało się wygenerować analizy. Spróbuj ponownie."
+        }
+      ],
+      "red_flags": [
+        {
+          "severity": "HIGH",
+          "type": "strategic_debate bez tool calls",
+          "detail": "Debata strategiczna bez zapytań do DB = halucynacja z pamięci."
+        }
+      ],
+      "cmp": {
+        "status": "ok",
+        "old_blocks": [],
+        "new_blocks": [],
+        "added": [],
+        "removed": [],
+        "old_hero": "",
+        "new_hero": ""
+      }
+    },
+    {
+      "test_id": "NEW-ADS",
+      "prompt": "Czy warto wydać 30 000 PLN miesięcznie na reklamy Google Ads? Pokaż scenariusze.",
+      "duration_sec": 102.49,
+      "route": "strategic_debate",
+      "response_type": "dashboard",
+      "tool_calls": 1,
+      "tools_used": [
+        "search_corporate_memory"
+      ],
+      "blocks": [
+        "metric_grid",
+        "carousel",
+        "data_table",
+        "text_card"
+      ],
+      "layout": [
+        {
+          "block_type": "metric_grid",
+          "title": "Bieżąca Kondycja Finansowa",
+          "subtitle": null,
+          "body": null,
+          "message": null,
+          "urgency": null,
+          "theme": null,
+          "chart_type": null,
+          "data": null,
+          "series_labels": null,
+          "metrics": [
+            {
+              "label": "Dostępna Gotówka (SafeCash)",
+              "value": "361 251 PLN",
+              "trend": null,
+              "trend_label": null,
+              "color": null
+            },
+            {
+              "label": "Średni MRR (4 msc)",
+              "value": "256 455 PLN",
+              "trend": null,
+              "trend_label": null,
+              "color": null
+            },
+            {
+              "label": "Średni Burn Rate (4 msc)",
+              "value": "169 832 PLN/mies.",
+              "trend": null,
+              "trend_label": null,
+              "color": null
+            },
+            {
+              "label": "Średni Zysk Netto (4 msc)",
+              "value": "86 623 PLN/mies.",
+              "trend": null,
+              "trend_label": null,
+              "color": null
+            },
+            {
+              "label": "LTV / CAC",
+              "value": "9.23x",
+              "trend": null,
+              "trend_label": null,
+              "color": "success"
+            }
+          ],
+          "steps": null,
+          "columns": null,
+          "rows": null,
+          "items": null,
+          "carousel_items": null,
+          "score": null,
+          "label": null,
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        },
+        {
+          "block_type": "carousel",
+          "title": "Scenariusze Inwestycji w Google Ads",
+          "subtitle": null,
+          "body": null,
+          "message": null,
+          "urgency": null,
+          "theme": null,
+          "chart_type": null,
+          "data": null,
+          "series_labels": null,
+          "metrics": null,
+          "steps": null,
+          "columns": null,
+          "rows": null,
+          "items": null,
+          "carousel_items": [
+            {
+              "title": "Scenariusz Optymistyczny (CAC 5 200 PLN)",
+              "body": "Założenie: Google Ads utrzymuje obecny CAC firmy. Miesięcznie pozyskano by **5.77** nowych klientów. Miesięczny wpływ na cashflow staje się pozytywny w **Lipcu 2026**. Skumulowany wpływ na cashflow z inwestycji po 6 miesiącach to **-10 458 PLN**."
+            },
+            {
+              "title": "Scenariusz Bazowy (CAC 6 000 PLN)",
+              "body": "Założenie: CAC z Google Ads jest nieznacznie wyższy. Miesięcznie pozyskano by **5** nowych klientów. Miesięczny wpływ na cashflow staje się pozytywny w **Sierpniu 2026**. Skumulowany wpływ na cashflow z inwestycji po 6 miesiącach to **-24 600 PLN**."
+            },
+            {
+              "title": "Scenariusz Pesymistyczny (CAC 10 000 PLN)",
+              "body": "Założenie: CAC z Google Ads jest znacznie wyższy. Miesięcznie pozyskano by **3** nowych klientów. Miesięczny wpływ na cashflow nie staje się pozytywny w ciągu 6 miesięcy. Skumulowany wpływ na cashflow z inwestycji po 6 miesiącach to **-86 760 PLN**."
+            }
+          ],
+          "score": null,
+          "label": null,
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        },
+        {
+          "block_type": "data_table",
+          "title": "Porównanie Scenariuszy Inwestycyjnych",
+          "subtitle": null,
+          "body": null,
+          "message": null,
+          "urgency": null,
+          "theme": null,
+          "chart_type": null,
+          "data": null,
+          "series_labels": null,
+          "metrics": null,
+          "steps": null,
+          "columns": [
+            "Scenariusz",
+            "Miesięczni Klienci",
+            "Break-even (miesięczny wpływ)",
+            "Skumulowany wpływ na cashflow (6 msc)"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Optymistyczny (CAC 5 200 PLN)",
+                "5.77",
+                "Lipiec 2026",
+                "-10 458 PLN"
+              ]
+            },
+            {
+              "cells": [
+                "Bazowy (CAC 6 000 PLN)",
+                "5",
+                "Sierpień 2026",
+                "-24 600 PLN"
+              ]
+            },
+            {
+              "cells": [
+                "Pesymistyczny (CAC 10 000 PLN)",
+                "3",
+                "Brak w 6 msc",
+                "-86 760 PLN"
+              ]
+            }
+          ],
+          "items": null,
+          "carousel_items": null,
+          "score": null,
+          "label": null,
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        },
+        {
+          "block_type": "text_card",
+          "title": "Rekomendacja i Dalsze Kroki",
+          "subtitle": null,
+          "body": "Inwestycja w Google Ads ma duży potencjał do skalowania ARR, ale wiąże się z początkowym drenażem gotówki. Obecna płynność firmy (**361 251 PLN**) pozwala na bezpieczne przeprowadzenie fazy pilotażowej.\n\nZalecam rozpoczęcie kampanii z mniejszym budżetem testowym (**10 000 - 15 000 PLN/mies.**) na okres **1-3 miesięcy**. Ścisłe monitorowanie rzeczywistego CAC i ROI z Google Ads jest kluczowe. Weryfikuj założenia i optymalizuj kampanię na bieżąco.",
+          "message": null,
+          "urgency": null,
+          "theme": null,
+          "chart_type": null,
+          "data": null,
+          "series_labels": null,
+          "metrics": null,
+          "steps": null,
+          "columns": null,
+          "rows": null,
+          "items": null,
+          "carousel_items": null,
+          "score": null,
+          "label": null,
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        }
+      ],
+      "hero_recommendation": "Inwestycja **30 000 PLN/mies.** w Google Ads jest uzasadniona długoterminowo, ale wymaga **pilotażu** i **ścisłego monitorowania CAC** w pierwszych **3-5 miesiącach**.",
+      "executive_summary": "Analiza trzech scenariuszy inwestycji **30 000 PLN/mies.** w Google Ads wskazuje na potencjalny długoterminowy zwrot, zgodny z celem skalowania ARR. Początkowo inwestycja obniży miesięczny zysk netto, ale przy utrzymaniu efektywnego CAC, miesięczny wpływ na cashflow stanie się pozytywny w ciągu **3-5 miesięcy**. Brak danych historycznych Google Ads stanowi główne ryzyko.",
+      "message": null,
+      "errors": [],
+      "red_flags": [],
+      "cmp": {
+        "status": "no_baseline"
+      }
+    },
+    {
+      "test_id": "NEW-STRUCT",
+      "prompt": "Pokaż mi strukturę kosztów per oddział.",
+      "duration_sec": 15.56,
+      "route": "analysis",
+      "response_type": "dashboard",
+      "tool_calls": 0,
+      "tools_used": [],
+      "blocks": [
+        "alert_banner",
+        "text_card"
+      ],
+      "layout": [
+        {
+          "block_type": "alert_banner",
+          "title": null,
+          "subtitle": null,
+          "body": null,
+          "message": "Brak danych: **0 z 61** faktur ma przypisany oddział. Przypisz oddziały do faktur, aby odblokować analizę struktury kosztów.",
+          "urgency": "high",
+          "theme": "danger",
+          "chart_type": null,
+          "data": null,
+          "series_labels": null,
+          "metrics": null,
+          "steps": null,
+          "columns": null,
+          "rows": null,
+          "items": null,
+          "carousel_items": null,
+          "score": null,
+          "label": null,
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        },
+        {
+          "block_type": "text_card",
+          "title": "Kolejne kroki",
+          "subtitle": null,
+          "body": "Aby uzyskać strukturę kosztów per oddział, należy przypisać oddziały do faktur. Bez tych danych, szczegółowa diagnostyka jest niemożliwa.",
+          "message": null,
+          "urgency": null,
+          "theme": null,
+          "chart_type": null,
+          "data": null,
+          "series_labels": null,
+          "metrics": null,
+          "steps": null,
+          "columns": null,
+          "rows": null,
+          "items": null,
+          "carousel_items": null,
+          "score": null,
+          "label": null,
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        }
+      ],
+      "hero_recommendation": "Przypisz oddziały do faktur, aby odblokować analizę struktury kosztów.",
+      "executive_summary": "Brak przypisanych oddziałów do faktur uniemożliwia analizę struktury kosztów per oddział. Obecnie **0 z 61** faktur ma przypisany oddział.",
+      "message": null,
+      "errors": [],
+      "red_flags": [],
+      "cmp": {
+        "status": "no_baseline"
+      }
+    }
+  ]
+}

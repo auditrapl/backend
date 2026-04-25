@@ -20,6 +20,11 @@ class Company(AsyncAttrs, Base):
     vat_status: Mapped[str | None] = mapped_column(String, nullable=True)
     employee_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     zus_type: Mapped[str | None] = mapped_column(String, nullable=True)
+    # Onboarding
+    onboarding_status: Mapped[str] = mapped_column(String, default="pending_nip")  # pending_nip | pending_wizard | pending_invoices | pending_review | complete
+    address: Mapped[str | None] = mapped_column(String, nullable=True)
+    pkd_code: Mapped[str | None] = mapped_column(String, nullable=True)
+    pkd_description: Mapped[str | None] = mapped_column(String, nullable=True)
     stripe_customer_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
     stripe_subscription_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
     stripe_price_id: Mapped[str | None] = mapped_column(String, nullable=True)
@@ -293,6 +298,7 @@ class Invoice(AsyncAttrs, Base):
     is_vat_exempt: Mapped[bool] = mapped_column(Boolean, default=False)
     department_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("departments.id"), nullable=True)
     category_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    category_source: Mapped[str] = mapped_column(String, default="ai_inferred")  # manual | ai_inferred | ksef_extracted
     is_paid: Mapped[bool] = mapped_column(Boolean, default=False)
     due_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     payment_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -396,7 +402,7 @@ class SharedCfoReport(AsyncAttrs, Base):
     company: Mapped["Company"] = relationship("Company")
 
 class ProactiveInsight(AsyncAttrs, Base):
-    """Proaktywne insighty generowane przez nocną zmianę (CRON 03:00)."""
+    """Proaktywne insighty: Tax Eye (per faktura), CFO Radar (nocny), Morning Briefing."""
     __tablename__ = "proactive_insights"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
@@ -405,10 +411,45 @@ class ProactiveInsight(AsyncAttrs, Base):
     description: Mapped[str] = mapped_column(Text, nullable=False)
     suggested_prompt: Mapped[str] = mapped_column(Text, nullable=False)
     urgency: Mapped[str] = mapped_column(String, nullable=False, default="medium")  # low | medium | high
-    summary: Mapped[str | None] = mapped_column(Text, nullable=True)  # tylko w pierwszym insighcie na odprawę
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Nowe pola — Tax Eye + CFO Radar
+    insight_type: Mapped[str] = mapped_column(String, nullable=False, default="morning")  # tax_eye | cfo_radar | morning
+    legal_basis: Mapped[str | None] = mapped_column(Text, nullable=True)  # np. "art. 88 ust. 1 pkt 4 ustawy o VAT"
+    estimated_savings: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)  # PLN
+    source_invoice_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("invoices.id"), nullable=True)
+    is_dismissed: Mapped[bool] = mapped_column(Boolean, default=False)  # user moze odrzucic
+
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     company: Mapped["Company"] = relationship("Company")
+    source_invoice: Mapped["Invoice | None"] = relationship("Invoice", foreign_keys=[source_invoice_id])
+
+
+class BankTransaction(AsyncAttrs, Base):
+    """Transakcja bankowa z CSV — do matching z fakturami."""
+    __tablename__ = "bank_transactions"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    company_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("companies.id"), nullable=False, index=True)
+    transaction_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    title: Mapped[str | None] = mapped_column(Text, nullable=True)
+    counterparty_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    counterparty_account: Mapped[str | None] = mapped_column(String, nullable=True)
+    reference: Mapped[str | None] = mapped_column(String, nullable=True)
+    balance_after: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
+    source_filename: Mapped[str | None] = mapped_column(String, nullable=True)
+    # Matching
+    matched_invoice_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("invoices.id"), nullable=True, index=True)
+    match_confidence: Mapped[float | None] = mapped_column(Numeric(4, 2), nullable=True)
+    match_status: Mapped[str] = mapped_column(String, default="unmatched")  # unmatched | suggested | confirmed | rejected
+    matched_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    matched_by: Mapped[str | None] = mapped_column(String, nullable=True)  # auto | manual
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    company: Mapped["Company"] = relationship("Company")
+    matched_invoice: Mapped["Invoice | None"] = relationship("Invoice", foreign_keys=[matched_invoice_id])
 
 
 class CompanyDocument(AsyncAttrs, Base):
@@ -434,6 +475,7 @@ class Conversation(AsyncAttrs, Base):
     company_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("companies.id"), nullable=False, index=True)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
     title: Mapped[str | None] = mapped_column(String, nullable=True)  # Auto-generowany z pierwszej wiadomości
+    category: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)  # analiza|raportowanie|strategia|anomalie|podatki
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)  # Auto-summary starszych wiadomości
     message_count: Mapped[int] = mapped_column(Integer, default=0)
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False)

@@ -1,0 +1,790 @@
+{
+  "started_at": "2026-04-19 13:27:07",
+  "results": [
+    {
+      "test_id": "P5-A",
+      "prompt": "Czy możemy otworzyć nowe biuro za 25 000 PLN miesięcznie?",
+      "duration_sec": 100.66,
+      "route": "strategic_debate",
+      "response_type": "dashboard",
+      "tool_calls": 1,
+      "tools_used": [
+        "search_corporate_memory"
+      ],
+      "blocks": [
+        "metric_grid",
+        "alert_banner",
+        "text_card",
+        "chart",
+        "data_table",
+        "scoring"
+      ],
+      "layout": [
+        {
+          "block_type": "metric_grid",
+          "title": "Kluczowe wskaźniki finansowe",
+          "subtitle": null,
+          "body": null,
+          "message": null,
+          "urgency": null,
+          "theme": null,
+          "chart_type": null,
+          "data": null,
+          "series_labels": null,
+          "metrics": [
+            {
+              "label": "Dostępna gotówka (po podatkach)",
+              "value": "331 451 PLN",
+              "trend": null,
+              "trend_label": null,
+              "color": null
+            },
+            {
+              "label": "Miesięczny NCF (bez biura)",
+              "value": "78 474 PLN",
+              "trend": null,
+              "trend_label": null,
+              "color": null
+            },
+            {
+              "label": "Miesięczny NCF (z biurem)",
+              "value": "53 474 PLN",
+              "trend": null,
+              "trend_label": null,
+              "color": null
+            },
+            {
+              "label": "Miesięczne koszty stałe (z biurem)",
+              "value": "194 986 PLN",
+              "trend": null,
+              "trend_label": null,
+              "color": null
+            },
+            {
+              "label": "Miesięczne pokrycie kosztów (z biurem)",
+              "value": "1.70 miesiąca",
+              "trend": null,
+              "trend_label": null,
+              "color": null
+            }
+          ],
+          "steps": null,
+          "columns": null,
+          "rows": null,
+          "items": null,
+          "carousel_items": null,
+          "score": null,
+          "label": null,
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        },
+        {
+          "block_type": "alert_banner",
+          "title": null,
+          "subtitle": null,
+          "body": null,
+          "message": "Pilne: Do **25.04.2026** należy opłacić podatki VAT i CIT w łącznej kwocie **29 800 PLN**.",
+          "urgency": "high",
+          "theme": "danger",
+          "chart_type": null,
+          "data": null,
+          "series_labels": null,
+          "metrics": null,
+          "steps": null,
+          "columns": null,
+          "rows": null,
+          "items": null,
+          "carousel_items": null,
+          "score": null,
+          "label": null,
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        },
+        {
+          "block_type": "text_card",
+          "title": null,
+          "subtitle": null,
+          "body": "Firma generuje stabilny zysk netto. Inwestycja w biuro zmniejszy miesięczny NCF o **25 000 PLN**.\n\nKluczowe ryzyka to koncentracja przychodów (Top 1 klient: **25.7%**) oraz sezonowość, które mogą wpłynąć na długoterminową płynność.",
+          "message": null,
+          "urgency": null,
+          "theme": null,
+          "chart_type": null,
+          "data": null,
+          "series_labels": null,
+          "metrics": null,
+          "steps": null,
+          "columns": null,
+          "rows": null,
+          "items": null,
+          "carousel_items": null,
+          "score": null,
+          "label": null,
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        },
+        {
+          "block_type": "chart",
+          "title": "Prognoza Cash Flow (Scenariusz z Biurem)",
+          "subtitle": null,
+          "body": null,
+          "message": null,
+          "urgency": null,
+          "theme": null,
+          "chart_type": "prediction_band",
+          "data": null,
+          "series_labels": [
+            "Pesymistyczny",
+            "Optymistyczny"
+          ],
+          "metrics": null,
+          "steps": null,
+          "columns": [
+            "Miesiąc",
+            "Pesymistyczny",
+            "Optymistyczny"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Kwiecień 2026",
+                "331451",
+                "331451"
+              ]
+            },
+            {
+              "cells": [
+                "Maj 2026",
+                "369552",
+                "397348"
+              ]
+            },
+            {
+              "cells": [
+                "Czerwiec 2026",
+                "393932",
+                "476289"
+              ]
+            },
+            {
+              "cells": [
+                "Lipiec 2026",
+                "405159",
+                "568926"
+              ]
+            },
+            {
+              "cells": [
+                "Sierpień 2026",
+                "403771",
+                "674944"
+              ]
+            },
+            {
+              "cells": [
+                "Wrzesień 2026",
+                "390278",
+                "796012"
+              ]
+            },
+            {
+              "cells": [
+                "Październik 2026",
+                "365164",
+                "932883"
+              ]
+            }
+          ],
+          "items": null,
+          "carousel_items": null,
+          "score": null,
+          "label": null,
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        },
+        {
+          "block_type": "data_table",
+          "title": "Szczegółowa prognoza cash flow (Środek Pasma)",
+          "subtitle": null,
+          "body": null,
+          "message": null,
+          "urgency": null,
+          "theme": null,
+          "chart_type": null,
+          "data": null,
+          "series_labels": null,
+          "metrics": null,
+          "steps": null,
+          "columns": [
+            "Miesiąc",
+            "Gotówka końcowa (Bez Biura)",
+            "NCF (Bez Biura)",
+            "Gotówka końcowa (Z Biurem)",
+            "NCF (Z Biurem)"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Kwiecień 2026",
+                "331 451 PLN",
+                "-",
+                "331 451 PLN",
+                "-"
+              ]
+            },
+            {
+              "cells": [
+                "Maj 2026",
+                "409 925 PLN",
+                "78 474 PLN",
+                "384 925 PLN",
+                "53 474 PLN"
+              ]
+            },
+            {
+              "cells": [
+                "Czerwiec 2026",
+                "488 399 PLN",
+                "78 474 PLN",
+                "438 399 PLN",
+                "53 474 PLN"
+              ]
+            },
+            {
+              "cells": [
+                "Lipiec 2026",
+                "566 873 PLN",
+                "78 474 PLN",
+                "491 873 PLN",
+                "53 474 PLN"
+              ]
+            },
+            {
+              "cells": [
+                "Sierpień 2026",
+                "645 347 PLN",
+                "78 474 PLN",
+                "545 347 PLN",
+                "53 474 PLN"
+              ]
+            },
+            {
+              "cells": [
+                "Wrzesień 2026",
+                "723 821 PLN",
+                "78 474 PLN",
+                "598 821 PLN",
+                "53 474 PLN"
+              ]
+            },
+            {
+              "cells": [
+                "Październik 2026",
+                "802 295 PLN",
+                "78 474 PLN",
+                "652 295 PLN",
+                "53 474 PLN"
+              ]
+            }
+          ],
+          "items": null,
+          "carousel_items": null,
+          "score": null,
+          "label": null,
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        },
+        {
+          "block_type": "scoring",
+          "title": null,
+          "subtitle": null,
+          "body": null,
+          "message": null,
+          "urgency": null,
+          "theme": null,
+          "chart_type": null,
+          "data": null,
+          "series_labels": null,
+          "metrics": null,
+          "steps": null,
+          "columns": null,
+          "rows": null,
+          "items": null,
+          "carousel_items": null,
+          "score": null,
+          "label": "Ocena Kondycji Finansowej",
+          "risk_level": null,
+          "details": "Firma jest w stanie pokryć nowy koszt, ale musi aktywnie zarządzać ryzykami koncentracji przychodów i sezonowości.",
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        }
+      ],
+      "hero_recommendation": "Otwarcie nowego biura za **25 000 PLN/mies.** jest możliwe. Firma utrzyma dodatni cash flow, ale należy monitorować ryzyka koncentracji przychodów i sezonowości.",
+      "executive_summary": "Firma posiada wystarczającą płynność i generuje stabilny zysk netto, aby pokryć koszt nowego biura **25 000 PLN/mies.** Po opłaceniu podatków w wysokości **29 800 PLN**, dostępna gotówka wyniesie **331 451 PLN**. Prognozy wskazują na utrzymanie dodatniego cash flow w obu scenariuszach, jednak scenariusz pesymistyczny z nowym biurem pokazuje spowolnienie wzrostu gotówki i ryzyko ujemnego NCF w dalszych miesiącach.",
+      "message": null,
+      "errors": [],
+      "red_flags": [],
+      "cmp": {
+        "status": "ok",
+        "old_blocks": [
+          "alert_banner",
+          "data_table",
+          "metric_grid",
+          "text_card"
+        ],
+        "new_blocks": [
+          "alert_banner",
+          "chart",
+          "data_table",
+          "metric_grid",
+          "scoring",
+          "text_card"
+        ],
+        "added": [
+          "chart",
+          "scoring"
+        ],
+        "removed": [],
+        "old_hero": "Odrzuć propozycję wynajmu nowego biura. Pozycja gotówkowa netto wynosi -85 968 PLN, co oznacza techniczną niewypłacalność.",
+        "new_hero": "Otwarcie nowego biura za **25 000 PLN/mies.** jest możliwe. Firma utrzyma dodatni cash flow, ale należy monitorować ryzyka koncentracji przychodów i sezonowości."
+      }
+    },
+    {
+      "test_id": "P5-B",
+      "prompt": "Porównaj scenariusz zatrudnienia 1 vs 3 nowych osób po 10 000 PLN każda.",
+      "duration_sec": 290.32,
+      "route": "strategic_debate",
+      "response_type": null,
+      "tool_calls": 0,
+      "tools_used": [],
+      "blocks": [],
+      "layout": [],
+      "hero_recommendation": null,
+      "executive_summary": null,
+      "message": null,
+      "errors": [
+        {
+          "status": "error",
+          "message": "Nie udało się wygenerować analizy. Spróbuj ponownie."
+        }
+      ],
+      "red_flags": [
+        {
+          "severity": "HIGH",
+          "type": "strategic_debate bez tool calls",
+          "detail": "Debata strategiczna bez zapytań do DB = halucynacja z pamięci."
+        }
+      ],
+      "cmp": {
+        "status": "ok",
+        "old_blocks": [],
+        "new_blocks": [],
+        "added": [],
+        "removed": [],
+        "old_hero": "",
+        "new_hero": ""
+      }
+    },
+    {
+      "test_id": "NEW-ADS",
+      "prompt": "Czy warto wydać 30 000 PLN miesięcznie na reklamy Google Ads? Pokaż scenariusze.",
+      "duration_sec": 104.69,
+      "route": "strategic_debate",
+      "response_type": "dashboard",
+      "tool_calls": 1,
+      "tools_used": [
+        "search_corporate_memory"
+      ],
+      "blocks": [
+        "metric_grid",
+        "alert_banner",
+        "carousel",
+        "chart",
+        "text_card"
+      ],
+      "layout": [
+        {
+          "block_type": "metric_grid",
+          "title": "Kluczowe wskaźniki (Kwiecień 2026)",
+          "subtitle": null,
+          "body": null,
+          "message": null,
+          "urgency": null,
+          "theme": null,
+          "chart_type": null,
+          "data": null,
+          "series_labels": null,
+          "metrics": [
+            {
+              "label": "Dostępna gotówka",
+              "value": "361 251 PLN",
+              "trend": null,
+              "trend_label": null,
+              "color": null
+            },
+            {
+              "label": "Miesięczny Zysk Netto",
+              "value": "111 069 PLN",
+              "trend": null,
+              "trend_label": null,
+              "color": null
+            },
+            {
+              "label": "LTV/CAC",
+              "value": "9.23",
+              "trend": null,
+              "trend_label": null,
+              "color": null
+            }
+          ],
+          "steps": null,
+          "columns": null,
+          "rows": null,
+          "items": null,
+          "carousel_items": null,
+          "score": null,
+          "label": null,
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        },
+        {
+          "block_type": "alert_banner",
+          "title": null,
+          "subtitle": null,
+          "body": null,
+          "message": "W Maju 2026 nastąpi płatność zobowiązań podatkowych w wysokości **29 800 PLN** (VAT + CIT) oraz innych zobowiązań **14 760 PLN**. Łącznie **44 560 PLN**.",
+          "urgency": "medium",
+          "theme": "warning",
+          "chart_type": null,
+          "data": null,
+          "series_labels": null,
+          "metrics": null,
+          "steps": null,
+          "columns": null,
+          "rows": null,
+          "items": null,
+          "carousel_items": null,
+          "score": null,
+          "label": null,
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        },
+        {
+          "block_type": "carousel",
+          "title": "Scenariusze inwestycji w Google Ads (30 000 PLN/miesiąc)",
+          "subtitle": null,
+          "body": null,
+          "message": null,
+          "urgency": null,
+          "theme": null,
+          "chart_type": null,
+          "data": null,
+          "series_labels": null,
+          "metrics": null,
+          "steps": null,
+          "columns": null,
+          "rows": null,
+          "items": null,
+          "carousel_items": [
+            {
+              "title": "Scenariusz Pesymistyczny",
+              "body": "CAC: **10 000 PLN**. Pozyskanie: **3 klientów/miesiąc**. Nowy MRR: **8 100 PLN/miesiąc**. Zwrot z inwestycji: **4 miesiące**. Ryzyko: wysoki CAC."
+            },
+            {
+              "title": "Scenariusz Realistyczny",
+              "body": "CAC: **5 200 PLN**. Pozyskanie: **5 klientów/miesiąc**. Nowy MRR: **13 500 PLN/miesiąc**. Zwrot z inwestycji: **3 miesiące**. Ryzyko: średni CAC."
+            },
+            {
+              "title": "Scenariusz Optymistyczny",
+              "body": "CAC: **4 000 PLN**. Pozyskanie: **7 klientów/miesiąc**. Nowy MRR: **18 900 PLN/miesiąc**. Zwrot z inwestycji: **2 miesiące**. Ryzyko: niski CAC."
+            }
+          ],
+          "score": null,
+          "label": null,
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        },
+        {
+          "block_type": "chart",
+          "title": "Prognoza Cashflow (6 miesięcy)",
+          "subtitle": "Porównanie scenariuszy inwestycyjnych",
+          "body": null,
+          "message": null,
+          "urgency": null,
+          "theme": null,
+          "chart_type": "prediction_band",
+          "data": null,
+          "series_labels": [
+            "Pesymistyczny",
+            "Optymistyczny",
+            "Realistyczny"
+          ],
+          "metrics": null,
+          "steps": null,
+          "columns": [
+            "Miesiąc",
+            "Pesymistyczny",
+            "Optymistyczny",
+            "Realistyczny"
+          ],
+          "rows": [
+            {
+              "cells": [
+                "Maj 2026",
+                "405 860 PLN",
+                "416 660 PLN",
+                "411 260 PLN"
+              ]
+            },
+            {
+              "cells": [
+                "Czerwiec 2026",
+                "503 129 PLN",
+                "535 529 PLN",
+                "519 329 PLN"
+              ]
+            },
+            {
+              "cells": [
+                "Lipiec 2026",
+                "608 498 PLN",
+                "673 298 PLN",
+                "640 898 PLN"
+              ]
+            },
+            {
+              "cells": [
+                "Sierpień 2026",
+                "721 967 PLN",
+                "829 967 PLN",
+                "775 967 PLN"
+              ]
+            },
+            {
+              "cells": [
+                "Wrzesień 2026",
+                "843 536 PLN",
+                "1 005 536 PLN",
+                "924 536 PLN"
+              ]
+            },
+            {
+              "cells": [
+                "Październik 2026",
+                "973 205 PLN",
+                "1 200 005 PLN",
+                "1 086 605 PLN"
+              ]
+            }
+          ],
+          "items": null,
+          "carousel_items": null,
+          "score": null,
+          "label": "Miesiąc",
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        },
+        {
+          "block_type": "text_card",
+          "title": "Wnioski i rekomendacje",
+          "subtitle": null,
+          "body": "Inwestycja **30 000 PLN/miesiąc** w Google Ads jest zgodna ze strategicznym celem skalowania ARR i ekspansji. Obecne wskaźniki LTV/CAC są zdrowe, co sugeruje efektywną monetyzację klientów.\n\nPłynność firmy jest wystarczająca, aby zaabsorbować ten wydatek. Kluczowe jest jednak ścisłe monitorowanie rzeczywistego CAC i ARPU z kampanii Google Ads.\n\nRekomendacja: Rozpocznij kampanię jako program pilotażowy. Ustanów jasne KPI i monitoruj je cotygodniowo. Bądź gotowy do szybkiej optymalizacji kampanii.",
+          "message": null,
+          "urgency": null,
+          "theme": null,
+          "chart_type": null,
+          "data": null,
+          "series_labels": null,
+          "metrics": null,
+          "steps": null,
+          "columns": null,
+          "rows": null,
+          "items": null,
+          "carousel_items": null,
+          "score": null,
+          "label": null,
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        }
+      ],
+      "hero_recommendation": "Rozważ inwestycję **30 000 PLN/miesiąc** w Google Ads. Oczekiwany zwrot z inwestycji nastąpi po **3 miesiącach** w scenariuszu realistycznym, pod warunkiem ścisłego monitorowania CAC i ARPU.",
+      "executive_summary": "Inwestycja w Google Ads jest uzasadniona, ale wymaga ścisłego monitorowania. Początkowy spadek zysku netto w Maju 2026 jest oczekiwany ze względu na wydatek na reklamy i zobowiązania podatkowe. W scenariuszu realistycznym, miesięczny zysk netto przekroczy poziom bazowy w Lipcu 2026, a skumulowany cashflow będzie rósł. Największym ryzykiem jest osiągnięcie wyższego niż zakładany CAC z Google Ads, co wydłuży czas zwrotu z inwestycji.",
+      "message": null,
+      "errors": [],
+      "red_flags": [],
+      "cmp": {
+        "status": "no_baseline"
+      }
+    },
+    {
+      "test_id": "NEW-STRUCT",
+      "prompt": "Pokaż mi strukturę kosztów per oddział.",
+      "duration_sec": 40.61,
+      "route": "analysis",
+      "response_type": "dashboard",
+      "tool_calls": 2,
+      "tools_used": [
+        "execute_sql_query"
+      ],
+      "blocks": [
+        "alert_banner",
+        "text_card"
+      ],
+      "layout": [
+        {
+          "block_type": "alert_banner",
+          "title": null,
+          "subtitle": null,
+          "body": null,
+          "message": "Brak danych o przypisanych oddziałach. **0 z 61** faktur ma przypisany oddział.",
+          "urgency": "high",
+          "theme": "danger",
+          "chart_type": null,
+          "data": null,
+          "series_labels": null,
+          "metrics": null,
+          "steps": null,
+          "columns": null,
+          "rows": null,
+          "items": null,
+          "carousel_items": null,
+          "score": null,
+          "label": null,
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        },
+        {
+          "block_type": "text_card",
+          "title": "Konieczne działania",
+          "subtitle": null,
+          "body": "Aby odblokować analizę struktury kosztów per oddział, należy przypisać oddziały do wszystkich faktur. Obecnie **0%** faktur posiada tę informację. Uzupełnienie danych umożliwi precyzyjne śledzenie wydatków i optymalizację budżetu.",
+          "message": null,
+          "urgency": null,
+          "theme": null,
+          "chart_type": null,
+          "data": null,
+          "series_labels": null,
+          "metrics": null,
+          "steps": null,
+          "columns": null,
+          "rows": null,
+          "items": null,
+          "carousel_items": null,
+          "score": null,
+          "label": null,
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        }
+      ],
+      "hero_recommendation": "Brak danych o przypisanych oddziałach uniemożliwia analizę struktury kosztów. Przypisz oddziały do faktur.",
+      "executive_summary": "Obecnie **0 z 61** faktur ma przypisany oddział. Bez tych danych nie można przeprowadzić analizy struktury kosztów per oddział. Konieczne jest uzupełnienie brakujących informacji, aby odblokować wgląd w alokację wydatków.",
+      "message": null,
+      "errors": [],
+      "red_flags": [],
+      "cmp": {
+        "status": "no_baseline"
+      }
+    }
+  ]
+}

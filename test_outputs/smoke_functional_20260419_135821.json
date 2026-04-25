@@ -1,0 +1,200 @@
+{
+  "started_at": "2026-04-19 13:40:02",
+  "results": [
+    {
+      "test_id": "P5-A",
+      "prompt": "Czy możemy otworzyć nowe biuro za 25 000 PLN miesięcznie?",
+      "duration_sec": 273.2,
+      "route": "strategic_debate",
+      "response_type": null,
+      "tool_calls": 0,
+      "tools_used": [],
+      "blocks": [],
+      "layout": [],
+      "hero_recommendation": null,
+      "executive_summary": null,
+      "message": null,
+      "errors": [
+        {
+          "status": "error",
+          "message": "Nie udało się wygenerować analizy. Spróbuj ponownie."
+        }
+      ],
+      "red_flags": [
+        {
+          "severity": "HIGH",
+          "type": "strategic_debate bez tool calls",
+          "detail": "Debata strategiczna bez zapytań do DB = halucynacja z pamięci."
+        }
+      ],
+      "cmp": {
+        "status": "ok",
+        "old_blocks": [
+          "alert_banner",
+          "data_table",
+          "metric_grid",
+          "text_card"
+        ],
+        "new_blocks": [],
+        "added": [],
+        "removed": [
+          "alert_banner",
+          "data_table",
+          "metric_grid",
+          "text_card"
+        ],
+        "old_hero": "Odrzuć propozycję wynajmu nowego biura. Pozycja gotówkowa netto wynosi -85 968 PLN, co oznacza techniczną niewypłacalność.",
+        "new_hero": ""
+      }
+    },
+    {
+      "test_id": "P5-B",
+      "prompt": "Porównaj scenariusz zatrudnienia 1 vs 3 nowych osób po 10 000 PLN każda.",
+      "duration_sec": 288.11,
+      "route": "strategic_debate",
+      "response_type": null,
+      "tool_calls": 0,
+      "tools_used": [],
+      "blocks": [],
+      "layout": [],
+      "hero_recommendation": null,
+      "executive_summary": null,
+      "message": null,
+      "errors": [
+        {
+          "status": "error",
+          "message": "Nie udało się wygenerować analizy. Spróbuj ponownie."
+        }
+      ],
+      "red_flags": [
+        {
+          "severity": "HIGH",
+          "type": "strategic_debate bez tool calls",
+          "detail": "Debata strategiczna bez zapytań do DB = halucynacja z pamięci."
+        }
+      ],
+      "cmp": {
+        "status": "ok",
+        "old_blocks": [],
+        "new_blocks": [],
+        "added": [],
+        "removed": [],
+        "old_hero": "",
+        "new_hero": ""
+      }
+    },
+    {
+      "test_id": "NEW-ADS",
+      "prompt": "Czy warto wydać 30 000 PLN miesięcznie na reklamy Google Ads? Pokaż scenariusze.",
+      "duration_sec": 524.27,
+      "route": "strategic_debate",
+      "response_type": null,
+      "tool_calls": 0,
+      "tools_used": [],
+      "blocks": [],
+      "layout": [],
+      "hero_recommendation": null,
+      "executive_summary": null,
+      "message": null,
+      "errors": [
+        {
+          "status": "error",
+          "message": "Nie udało się wygenerować analizy. Spróbuj ponownie."
+        }
+      ],
+      "red_flags": [
+        {
+          "severity": "HIGH",
+          "type": "strategic_debate bez tool calls",
+          "detail": "Debata strategiczna bez zapytań do DB = halucynacja z pamięci."
+        }
+      ],
+      "cmp": {
+        "status": "no_baseline"
+      }
+    },
+    {
+      "test_id": "NEW-STRUCT",
+      "prompt": "Pokaż mi strukturę kosztów per oddział.",
+      "duration_sec": 13.46,
+      "route": "analysis",
+      "response_type": "dashboard",
+      "tool_calls": 0,
+      "tools_used": [],
+      "blocks": [
+        "alert_banner",
+        "text_card"
+      ],
+      "layout": [
+        {
+          "block_type": "alert_banner",
+          "title": null,
+          "subtitle": null,
+          "body": null,
+          "message": "Brak danych o strukturze kosztów per oddział. **0 ze 61** faktur ma przypisany oddział.",
+          "urgency": "high",
+          "theme": "danger",
+          "chart_type": null,
+          "data": null,
+          "series_labels": null,
+          "metrics": null,
+          "steps": null,
+          "columns": null,
+          "rows": null,
+          "items": null,
+          "carousel_items": null,
+          "score": null,
+          "label": null,
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        },
+        {
+          "block_type": "text_card",
+          "title": "Rekomendacja",
+          "subtitle": null,
+          "body": "Przypisz oddziały do faktur. Bez tego nie można analizować wydatków per departament ani optymalizować budżetów. To kluczowe dla diagnostyki kosztów.",
+          "message": null,
+          "urgency": null,
+          "theme": null,
+          "chart_type": null,
+          "data": null,
+          "series_labels": null,
+          "metrics": null,
+          "steps": null,
+          "columns": null,
+          "rows": null,
+          "items": null,
+          "carousel_items": null,
+          "score": null,
+          "label": null,
+          "risk_level": null,
+          "details": null,
+          "strengths": null,
+          "weaknesses": null,
+          "opportunities": null,
+          "threats": null,
+          "paths": null,
+          "payments": null,
+          "question": null,
+          "picker_type": null
+        }
+      ],
+      "hero_recommendation": "Przypisz oddziały do faktur, aby odblokować analizę struktury kosztów i umożliwić strategiczne decyzje.",
+      "executive_summary": "Brak przypisanych oddziałów do faktur uniemożliwia analizę struktury kosztów. Obecnie **0 ze 61** faktur ma przypisany oddział.",
+      "message": null,
+      "errors": [],
+      "red_flags": [],
+      "cmp": {
+        "status": "no_baseline"
+      }
+    }
+  ]
+}

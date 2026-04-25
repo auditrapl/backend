@@ -108,7 +108,7 @@ POZOSTAŁE ZASADY:
 """
     
     response = client.models.generate_content(
-        model='gemini-3.1-pro-preview',
+        model='gemini-2.5-flash',
         contents=user_prompt,
         config=types.GenerateContentConfig(
             system_instruction=sys_prompt,
@@ -182,7 +182,7 @@ Na podstawie tych danych i prośby Prezesa, wygeneruj dokładną analizę i 6-mi
 """
 
     response = client.models.generate_content(
-        model='gemini-3.1-pro-preview',
+        model='gemini-2.5-flash',
         contents=user_message,
         config=types.GenerateContentConfig(
             system_instruction=sys_prompt,
@@ -192,8 +192,9 @@ Na podstawie tych danych i prośby Prezesa, wygeneruj dokładną analizę i 6-mi
     )
 
     # The Google GenAI SDK returns the parsed text directly as json string when schema is provided
-    # Let's parse it into Pydantic model
-    return StrategyResponse.model_validate_json(response.text)
+    # Let's parse it into Pydantic model (defensywnie)
+    from app.services._json_parse import safe_model_validate_json
+    return safe_model_validate_json(StrategyResponse, response.text)
 
 # ─── MAIN ORCHESTRATOR ───────────────────────────────────────
 async def run_strategy_agent(user_prompt: str, company_id: str, date_from: str = None, date_to: str = None) -> dict:

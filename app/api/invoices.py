@@ -2,6 +2,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import func
 from typing import List
 from uuid import UUID
 from app.database import get_db
@@ -227,4 +228,101 @@ async def update_invoice(
     background_tasks.add_task(refresh_safecash_background, str(db_invoice.company_id))
 
     return db_invoice
+
+
+@router.delete("/{invoice_id}")
+async def delete_invoice(
+    invoice_id: UUID,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Usuń fakturę i powiązane rekordy (audit_logs, proactive_insights, bank_transactions)."""
+    from app.models import AuditLog, ProactiveInsight, BankTransaction
+    from sqlalchemy import delete as sql_delete
+
+    result = await db.execute(
+        select(Invoice).where(Invoice.id == invoice_id, Invoice.company_id == current_user.company_id)
+    )
+    inv = result.scalar_one_or_none()
+    if not inv:
+        raise HTTPException(status_code=404, detail="Faktura nie znaleziona")
+
+    company_id = str(inv.company_id)
+
+    # Usuń powiązane rekordy (FK constraints)
+    await db.execute(sql_delete(AuditLog).where(AuditLog.invoice_id == invoice_id))
+    await db.execute(sql_delete(ProactiveInsight).where(ProactiveInsight.source_invoice_id == invoice_id))
+    await db.execute(
+        sql_delete(BankTransaction).where(BankTransaction.matched_invoice_id == invoice_id)
+    )
+
+    await db.delete(inv)
+    await db.commit()
+
+    background_tasks.add_task(refresh_safecash_background, company_id)
+    return {"status": "deleted"}
+
+
+@router.post("/{invoice_id}/apply-suggestion", response_model=InvoiceResponse)
+async def apply_ai_suggestion(
+    invoice_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Zatwierdź AI sugestię oddziału/kategorii.
+    - Jeśli dział już istnieje → przypina fakturę do niego.
+    - Jeśli AI sugeruje nowy dział (is_new_department=true) → automatycznie tworzy go i przypina fakturę.
+    """
+    result = await db.execute(
+        select(Invoice).where(Invoice.id == invoice_id, Invoice.company_id == current_user.company_id)
+    )
+    invoice = result.scalar_one_or_none()
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Faktura nie znaleziona")
+
+    ai = invoice.ai_analysis_json or {}
+    dept_suggestion = ai.get("department_assignment", {})
+
+    if not dept_suggestion:
+        raise HTTPException(status_code=400, detail="Brak sugestii AI dla tej faktury")
+
+    dept_name = (dept_suggestion.get("department_name") or "").strip()
+    if not dept_name:
+        raise HTTPException(status_code=400, detail="Sugestia AI nie zawiera nazwy działu")
+
+    from app.models import Department
+
+    # Szukaj istniejącego działu (case-insensitive, trim)
+    dept_result = await db.execute(
+        select(Department).where(
+            Department.company_id == current_user.company_id,
+            func.lower(func.trim(Department.name)) == dept_name.lower(),
+        )
+    )
+    dept = dept_result.scalar_one_or_none()
+
+    # Nie ma → utwórz (bez względu na flagę is_new_department; jeśli AI powiedziało "Marketing"
+    # a dział "Marketing" nie istnieje, to i tak trzeba go utworzyć)
+    if not dept:
+        dept = Department(
+            company_id=current_user.company_id,
+            name=dept_name,
+        )
+        db.add(dept)
+        await db.flush()
+
+    invoice.department_id = dept.id
+
+    # Apply category if suggested
+    suggested_cat = ai.get("audit_result", {}).get("suggested_category") or dept_name
+    if suggested_cat:
+        invoice.category_name = invoice.category_name or suggested_cat
+
+    # Mark as manually confirmed
+    invoice.category_source = "manual"
+    await db.commit()
+    await db.refresh(invoice)
+    return invoice
 

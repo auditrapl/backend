@@ -126,7 +126,8 @@ Zadanie: Wyciągnij twarde fakty finansowe z powyższego tekstu i sklasyfikuj do
         )
     )
     
-    parsed = DocumentSummaryOutput.model_validate_json(response.text)
+    from app.services._json_parse import safe_model_validate_json
+    parsed = safe_model_validate_json(DocumentSummaryOutput, response.text)
     return parsed.model_dump()
 
 

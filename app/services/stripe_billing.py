@@ -176,6 +176,18 @@ createSubscription = create_subscription
 cancelSubscription = cancel_subscription
 
 
+def trial_days_from_env() -> int | None:
+    """STRIPE_TRIAL_DAYS — opcjonalny trial (0/unset = bez triala)."""
+    raw = os.getenv("STRIPE_TRIAL_DAYS", "").strip()
+    if not raw:
+        return None
+    try:
+        days = int(raw)
+        return days if days > 0 else None
+    except ValueError:
+        return None
+
+
 def create_checkout_session(
     *,
     company: Company,
@@ -186,6 +198,15 @@ def create_checkout_session(
     cancel_url: str,
 ) -> stripe.checkout.Session:
     initialize_stripe_client()
+    subscription_data: dict = {
+        "metadata": {
+            **company_metadata(company),
+            "price_id": price_id,
+        }
+    }
+    trial_days = trial_days_from_env()
+    if trial_days:
+        subscription_data["trial_period_days"] = trial_days
     return stripe.checkout.Session.create(
         mode="subscription",
         customer=customer_id,
@@ -199,12 +220,7 @@ def create_checkout_session(
             **company_metadata(company),
             "user_id": str(user.id),
         },
-        subscription_data={
-            "metadata": {
-                **company_metadata(company),
-                "price_id": price_id,
-            }
-        },
+        subscription_data=subscription_data,
     )
 
 

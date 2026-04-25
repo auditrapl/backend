@@ -13,9 +13,19 @@ logger = logging.getLogger(__name__)
 # Max execution time for a single SQL query (seconds)
 SQL_STATEMENT_TIMEOUT_S = 10
 
-# ── In-memory cache for corporate memory (TTL 60s) ──
-_memory_cache: dict[str, tuple[float, str]] = {}  # company_id → (timestamp, text)
-_MEMORY_CACHE_TTL = 60.0  # seconds
+# ── Two-tier cache for corporate memory ──
+# L1 (canonical: NIP, model biznesowy, strategia) — zmienia się raz na kilka tygodni.
+# L2 (operational: SafeCash, metryki faktur) — zmienia się po każdej fakturze.
+# Assembled text = L1 + L2 + L3 → cache z krótszym TTL (bo zawiera L2).
+# Ale invalidation L2 dzieje się tylko po invoice change (background task),
+# nie w trakcie czatu — więc 5 min jest bezpieczne.
+_memory_cache: dict[str, tuple[float, str]] = {}  # company_id → (timestamp, assembled_text)
+_MEMORY_CACHE_TTL = 300.0  # 5 min — pokrywa wielokrotne tool calls w 1 rozmowie
+
+def invalidate_memory_cache(company_id: str):
+    """Call after invoice changes or context updates to force fresh data."""
+    _memory_cache.pop(company_id, None)
+
 
 FORBIDDEN_SQL_KEYWORDS = [
     "DROP ", "DELETE ", "UPDATE ", "INSERT ", "ALTER ", "TRUNCATE ",
@@ -30,12 +40,16 @@ def make_execute_sql_query(company_id: str) -> Callable:
         WAŻNE: Każde zapytanie MUSI zawierać filtr company_id = '<company_id>'.
 
         Tabela `invoices`: id, company_id, invoice_type ('expense'/'income'),
-            contractor_name, net_amount, gross_amount, vat_amount, issue_date,
-            is_paid, status, category, department_id, risk_score,
-            ai_analysis_json (JSONB z polem risk_score).
-        Tabela `departments`: id, company_id, name, monthly_limit.
+            contractor_name, contractor_nip, net_amount, gross_amount, vat_amount,
+            issue_date, due_date, is_paid, status, category_name, category_source,
+            department_id, risk_score, ai_analysis_json (JSONB).
+            UWAGA: category_source = 'manual' (user przypisal) | 'ai_inferred' (AI zgadl) | 'ksef_extracted' (z KSeF).
+            Jesli category_source = 'ai_inferred' → to HIPOTEZA, nie fakt. Oznacz w odpowiedzi.
+        Tabela `departments`: id, company_id, name, description, monthly_limit.
 
-        Zwraca wyniki jako JSON string (max 50 wierszy).
+        Zwraca JSON: {"rows": [...], "row_count": N, "truncated": bool, "applied_limit": int, "warning": ...}.
+        Jeśli truncated=true, wynik jest fragmentem. NIE licz SUM/AVG/TOP na takim zbiorze —
+        uruchom osobne zapytanie z SUM()/COUNT() bez LIMIT. Inaczej dostaniesz halucynację agregatu.
         """
         logger.info(f"[SQL_TOOL] company={company_id[:8]}.. query={query[:200]}")
 
@@ -66,8 +80,19 @@ def make_execute_sql_query(company_id: str) -> Callable:
             })
 
         # ── 4. Enforce LIMIT (prevent full table scans) ──
+        applied_limit: int | None = None
         if "LIMIT" not in query_upper:
-            query = query.rstrip().rstrip(';') + " LIMIT 50"
+            applied_limit = 50
+            query = query.rstrip().rstrip(';') + f" LIMIT {applied_limit}"
+        else:
+            # Extract LIMIT value if user-supplied, for truncation signalling
+            import re as _re
+            m = _re.search(r"LIMIT\s+(\d+)", query_upper)
+            if m:
+                try:
+                    applied_limit = int(m.group(1))
+                except ValueError:
+                    applied_limit = None
 
         # ── 5. Execute with timeout ──
         try:
@@ -78,14 +103,70 @@ def make_execute_sql_query(company_id: str) -> Callable:
                 result = await conn.execute(text(query))
                 rows = [dict(zip(result.keys(), row)) for row in result.fetchall()]
 
-                logger.info(f"[SQL_RESULT] {len(rows)} row(s) returned")
-                return json.dumps(rows, default=str, ensure_ascii=False)
+                # ── Truncation signalling (anti-hallucination) ──
+                # If we returned exactly LIMIT rows, caller must ASSUME more exist.
+                # Agent MUST NOT compute SUM/AVG/TOP on truncated data without
+                # re-querying with an explicit aggregate.
+                truncated = applied_limit is not None and len(rows) >= applied_limit
+                warning = None
+                if truncated:
+                    warning = (
+                        f"DANE UCIĘTE do {applied_limit} wierszy. Pełny zbiór jest większy. "
+                        f"NIE licz SUM/AVG/TOP/COUNT na tej próbce — uruchom osobne zapytanie "
+                        f"z SUM()/AVG()/COUNT() bez LIMIT, albo powiedz userowi 'Zestawienie "
+                        f"ograniczone do {applied_limit} pozycji, pełne wartości niedostępne.'"
+                    )
+
+                payload = {
+                    "rows": rows,
+                    "row_count": len(rows),
+                    "truncated": truncated,
+                    "applied_limit": applied_limit,
+                }
+                if warning:
+                    payload["warning"] = warning
+
+                logger.info(
+                    f"[SQL_RESULT] {len(rows)} row(s) returned, truncated={truncated}"
+                )
+                return json.dumps(payload, default=str, ensure_ascii=False)
 
         except Exception as e:
             logger.error(f"[SQL_ERROR] {str(e)}")
             return json.dumps({"error": f"Błąd SQL: {str(e)}"})
 
     return execute_sql_query
+
+
+async def get_category_coverage(company_id: str) -> dict:
+    """Sprawdza jaki % faktur ma przypisaną kategorię/oddział. Deterministic, zero AI."""
+    from app.database import AsyncSessionLocal
+    from sqlalchemy import text
+
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(text("""
+            SELECT
+                COUNT(*) AS total,
+                COUNT(department_id) AS with_department,
+                COUNT(CASE WHEN category_source = 'manual' THEN 1 END) AS manual_category,
+                COUNT(CASE WHEN category_source = 'ai_inferred' THEN 1 END) AS ai_category,
+                COUNT(category_name) AS with_any_category
+            FROM invoices
+            WHERE company_id = :cid
+        """), {"cid": company_id})
+        row = result.fetchone()
+        if not row or row.total == 0:
+            return {"total": 0, "coverage_pct": 0, "can_show_structure": False}
+
+        coverage = (row.with_department + row.manual_category) / row.total
+        return {
+            "total": row.total,
+            "with_department": row.with_department,
+            "manual_category": row.manual_category,
+            "ai_category": row.ai_category,
+            "coverage_pct": round(coverage * 100, 1),
+            "can_show_structure": coverage >= 0.5,
+        }
 
 
 def make_search_corporate_memory(company_id: str) -> Callable:

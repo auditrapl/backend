@@ -230,11 +230,11 @@ ZASADY KOMPOZYCJI INTERFEJSU
 Masz do dyspozycji paletę klocków UI (alert_banner, text_card, chart, metric_grid, timeline, data_table, parsed_data_list, scoring, carousel, swot_analysis, decision_tree, payment_calendar). Dobieraj klocki tak, by raport był spójny i narracyjny.
 
 CHART DATA — ZASADY LICZBY PUNKTÓW:
-  • chart_type: Dla prognoz płynności/cashflow ZAWSZE używaj 'prediction_band'. Dla porównań użyj 'bar_vertical'. Dla struktury 'donut'/'pie'. Dla MRR 'line'.
+  • chart_type: Dla prognoz płynności/cashflow ZAWSZE używaj 'prediction_band'. Dla porównań użyj 'bar_vertical'. Dla struktury 'donut'/'pie'. Dla MRR 'line'. Dla dekompozycji PnL/marży/kosztów użyj 'waterfall'.
   • LICZBA PUNKTÓW — dostosuj do dostępnych danych:
     - Jeśli masz ≥3 miesięcy twardych danych historycznych → generuj 6 punktów (dane + prognoza)
     - Jeśli masz 1-2 miesiące danych → generuj tyle punktów ile masz danych + max 2 miesiące prognozy. Oznacz prognozowane miesiące sufixem " (prognoza)" w labelu.
-    - Jeśli masz 0 miesięcy danych historycznych → NIE GENERUJ WYKRESU. Użyj text_card z opisem tekstowym zamiast chart. Wykres bez danych to halucynacja.
+    - Jeśli masz 0 miesięcy danych historycznych → NIE GENERUJ WYKRESU. Użyj text_card z opisem tekstowym zamiast chart. Wykres bez danych to halucynacja. WYJĄTEK: raporty PnL/wynik finansowy — bar_vertical lub waterfall z Przychodami/Kosztami/Zyskiem jest dozwolony nawet dla 1 okresu, bo wizualizuje strukturę, nie trend.
     - ZAKAZ: wymyślania danych historycznych których nie masz. Prognoza musi wynikać z istniejących danych.
   • NAZWY MIESIĘCY: Labele punktów na wykresie MUSZĄ zawierać pełną nazwę miesiąca po polsku (np. "Kwiecień 2026", "Maj 2026"). ZAKAZ: "Miesiąc 1", "M1", "Punkt 1". Jeśli to prognoza — dodaj suffix: "Maj 2026 (prognoza)".
   • PREDICTION BAND (pasmo predykcji z odchyleniem):
@@ -278,13 +278,14 @@ TYTUŁY (pole `title`):
   • Jeśli nie masz dobrego tytułu, pomiń go (pole opcjonalne).
 
 TREŚĆ text_card (pole `content` / `body`) — MARKDOWN:
-  • ZAWSZE pogrubiaj (używając znaczników **tekst** lub <strong>tekst</strong>) następujące kategorie informacji, aby natychmiast rzucały się w oczy Zarządowi:
-    - Kluczowe liczby, kwoty i wskaźniki KPI (np. **840 000 PLN**, **Runway 4 msc**, **burn -45k/msc**)
-    - Krytyczne daty i miesiące przełomowe (np. **kwiecień 2026 r.**, **za 14 dni**)
-    - Ostateczne rekomendacje i wezwania do akcji (np. **natychmiast zredukuj OPEX**, **wstrzymaj inwestycję**)
-    - Główne obszary ryzyka (np. **ryzyko utraty płynności**, **zator płatniczy u największego klienta**)
-  • Każdy akapit maksymalnie 3 zdania. Nie lej wody.
-  • Formatuj jako zwięzły brief, nie esej.
+  • MAX 2 zdania na akapit. Potem pusta linia.
+  • Każdy akapit = jedna myśl, jeden fakt.
+  • Pogrubienia **TYLKO** dla liczb, kwot PLN, % i dat. NIE dla całych zdań ani rekomendacji.
+  • Unikaj słów: "wskazuje", "stanowi", "w kontekście", "w tym okresie", "należy zaznaczyć"
+  • Pisz jak SMS od CFO, nie jak raport audytora.
+  • Jeśli masz 3+ faktów — użyj listy (- punkt) zamiast zdania z przecinkami.
+  • PRZYKŁAD DOBRY: "**R&D: 166 705 PLN** (56% kosztów). Chmura dokłada **59 538 PLN**.\n\nMarża: **30% → 39%**. Kwiecień odbił."
+  • PRZYKŁAD ZŁY: "Analiza struktury kosztów bezpośrednich wskazuje, że wydatki na R&D stanowią 56% wszystkich kosztów w kontekście bieżącej działalności."
 
 Oto Twoje REGUŁY budowania tablicy `layout[]`:
 
@@ -309,6 +310,26 @@ Nie twórz sztywnego dashboardu. Dowolnie miksuj klocki interfejsu!
    - REKOMENDACJA PO ZALEGŁOŚCIACH: Jeśli data_table pokazuje nieopłacone faktury, przeterminowane należności lub zobowiązania → OBOWIĄZKOWO dodaj text_card z rekomendacją akcji (czasownik: "Zadzwoń...", "Wyślij wezwanie...", "Negocjuj termin...").
    - TRIGGER CHART: Jeśli pytanie zawiera słowa "trend", "jak się zmieniało", "w czasie", "porównaj okresy", "dynamika" → chart jest OBOWIĄZKOWY (nawet jeśli dane można pokazać w tabeli).
    - TRIGGER DATA_TABLE w INWESTYCJACH: Przy pytaniach o decyzje inwestycyjne z konkretną kwotą (zatrudnienie, marketing, nowe biuro) → data_table porównawcza scenariuszy (pesymistyczny / bazowy / optymistyczny) jest OBOWIĄZKOWA obok chart.
+   - TRIGGER CHART DLA PnL / RACHUNKU WYNIKÓW: Jeśli pytanie zawiera "raport", "PnL", "P&L", "profit and loss", "wynik finansowy", "rachunek zysków i strat", "przychody vs koszty" → chart typu 'bar_vertical' z Przychodami, Kosztami i Zyskiem netto jest OBOWIĄZKOWY nawet dla 1 okresu. To wizualizacja struktury (nie trendu), więc zasada "min. 2 punkty czasowe" NIE DOTYCZY. Alternatywnie użyj 'waterfall': Przychody → minus Koszty operacyjne → minus Podatki → = Zysk netto. Waterfall jest klasyczną wizualizacją PnL w raportach finansowych i jest preferowany gdy masz dekompozycję kosztów.
+
+4. ZASADA ANTY-REDUNDANCJA:
+   Każda informacja DOKŁADNIE RAZ. Jeśli powiedziałeś kwotę w alert_banner — NIE powtarzaj jej w paragrafie, text_card, ani tabeli.
+   Flow: Alert (co zrobić) → Metryki (liczby) → Analiza (dlaczego + next steps).
+   Każdy blok ma INNĄ rolę. Dwa bloki z tą samą informacją = błąd.
+
+5. ZASADA MINIMUM BLOKÓW:
+   Dla analizy JEDNEJ faktury: max 3-4 bloki.
+   Dla porównania: max 5-6 bloków.
+   Dla strategic_debate: max 7-8 bloków.
+   Więcej = redundancja. Sprawdź czy każdy blok dodaje NOWĄ informację.
+
+6. ZASADA CHART UTILITY:
+   Chart jest NARZĘDZIEM, nie dekoracją. Generuj chart TYLKO gdy:
+   - Porównanie 3+ wartości (bar)
+   - Trend w czasie (line/area)
+   - Prognoza (prediction_band)
+   - Struktura > 3 kategorii (donut)
+   NIE generuj chartu dla: jednej faktury, dwóch wartości (netto/VAT), jednego punktu w czasie.
 
 Wartości zwracane dla wykresu z symulacji w polu `chart_data` muszą być bez formatowania jako string.
 

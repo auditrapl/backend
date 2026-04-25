@@ -18,13 +18,17 @@ logger = logging.getLogger("morning_briefing")
 
 NIGHT_SHIFT_SYSTEM_PROMPT = (
     "Jesteś 'Majorem CFO' – autonomicznym, bezlitosnym i analitycznym dyrektorem finansowym AI. "
-    "Pracujesz na 'nocnej zmianie'. Przeanalizuj Kontekst Firmy i przygotuj Poranną Odprawę. "
+    "Pracujesz na 'nocnej zmianie'. Przeanalizuj Kontekst Firmy i przygotuj Poranną Odprawę.\n\n"
     "MUSISZ wygenerować: (1) pole 'summary' — jedno krótkie podsumowanie stanu firmy (2-3 zdania, "
-    "twarde liczby, najważniejszy sygnał dnia, pisane jak briefing dla zarządu); "
-    "(2) dokładnie 3 insighty. "
-    "Szukaj anomalii, ryzyk cashflow, szans na optymalizację (ZUS, SaaS) lub strategii. "
-    "'suggested_prompt' musi być komendą, która uruchomi pełną 'Wojnę Domową' agentów. "
-    "Język ma być twardy, biznesowy, zero lania wody."
+    "twarde liczby, najważniejszy sygnał dnia); "
+    "(2) dokładnie 3 insighty.\n\n"
+    "PRIORYTET INSIGHTOW:\n"
+    "1. PODATKI: jesli otrzymujesz ALERTY PODATKOWE z audytu faktur — uzyj ich jako insight #1. "
+    "Zawsze podaj podstawe prawna (artykul ustawy) i szacunkowa oszczednosc w PLN.\n"
+    "2. PLYNNOSC: ryzyka cashflow, zatory platnicze, przeterminowane faktury.\n"
+    "3. STRATEGIA: szanse na optymalizacje (ZUS, CIT, IP Box), dywersyfikacja klientow.\n\n"
+    "'suggested_prompt' musi byc komenda ktora uruchomi pelna analize agentow CFO. "
+    "Jezyk: twardy, biznesowy, zero lania wody. Kazdy insight z konkretna liczba w PLN."
 )
 
 
@@ -34,30 +38,85 @@ async def generate_briefing_for_company(
     context_data: dict,
 ) -> None:
     """Generate 3 proactive insights for a single company and save to DB."""
+    # Guard: nie generuj briefingu z pustego kontekstu — Gemini halucynuje kwoty
+    if not context_data:
+        logger.info(f"[NightShift] Skipping company {company_id}: empty context_data")
+        return
+
+    canonical = context_data.get("canonical", {})
+    operational = context_data.get("operational", {})
+    has_identity = bool(canonical.get("company_identity", {}).get("name"))
+    has_financials = bool(operational.get("live_financial_pulse", {}).get("mrr"))
+    if not has_identity and not has_financials:
+        logger.info(f"[NightShift] Skipping company {company_id}: no identity or financials in context")
+        return
+
     client = genai.Client()
 
     context_str = json.dumps(context_data, ensure_ascii=False, default=str)
 
+    # ── Wzbogac kontekst o dane z audytow faktur (Tax Eye) ──
+    tax_context = ""
+    try:
+        from app.models import Invoice
+        from sqlalchemy import func
+
+        # Top 5 faktur z najwyzszym risk_score
+        risky = await db.execute(
+            select(Invoice.contractor_name, Invoice.gross_amount, Invoice.risk_score, Invoice.category_name)
+            .where(Invoice.company_id == company_id, Invoice.risk_score > 30)
+            .order_by(Invoice.risk_score.desc())
+            .limit(5)
+        )
+        risky_rows = risky.fetchall()
+
+        # Suma estimated_savings z tax_eye insightow (ostatnie 30 dni)
+        from datetime import timedelta
+        savings_result = await db.execute(
+            select(func.sum(ProactiveInsight.estimated_savings))
+            .where(
+                ProactiveInsight.company_id == company_id,
+                ProactiveInsight.insight_type == "tax_eye",
+                ProactiveInsight.estimated_savings.isnot(None),
+                ProactiveInsight.created_at >= datetime.utcnow() - timedelta(days=30),
+            )
+        )
+        total_savings = savings_result.scalar() or 0
+
+        if risky_rows or total_savings > 0:
+            parts = ["\n\nALERTY PODATKOWE Z AUDYTU FAKTUR:"]
+            if total_savings > 0:
+                parts.append(f"Laczne zidentyfikowane oszczednosci (30 dni): {total_savings:,.0f} PLN")
+            for row in risky_rows:
+                parts.append(f"- {row.contractor_name}: {row.gross_amount:,.0f} PLN, risk={row.risk_score}/100, kat={row.category_name}")
+            tax_context = "\n".join(parts)
+    except Exception as tex:
+        logger.warning(f"[NightShift] Tax context enrichment failed: {tex}")
+
     try:
         response = await client.aio.models.generate_content(
             model="gemini-2.5-flash",
-            contents=f"Kontekst Firmy:\n{context_str}",
+            contents=f"Kontekst Firmy:\n{context_str}{tax_context}",
             config=types.GenerateContentConfig(
                 system_instruction=NIGHT_SHIFT_SYSTEM_PROMPT,
-                temperature=0.6,
+                temperature=0.2,  # Niska temp → spójny, przewidywalny format briefingu
                 response_mime_type="application/json",
                 response_schema=DailyBriefingSchema,
             ),
         )
 
-        briefing = DailyBriefingSchema.model_validate_json(response.text)
+        from app.services._json_parse import safe_model_validate_json
+        briefing = safe_model_validate_json(DailyBriefingSchema, response.text)
 
-        # Delete stale insights for this company
+        # Delete stale MORNING insights only (keep tax_eye + cfo_radar)
         await db.execute(
-            delete(ProactiveInsight).where(ProactiveInsight.company_id == company_id)
+            delete(ProactiveInsight).where(
+                ProactiveInsight.company_id == company_id,
+                ProactiveInsight.insight_type == "morning",
+            )
         )
 
-        # Insert fresh insights — summary zapisywany tylko w pierwszym
+        # Insert fresh morning insights
         for i, insight in enumerate(briefing.insights[:3]):
             db.add(ProactiveInsight(
                 company_id=company_id,
@@ -65,6 +124,7 @@ async def generate_briefing_for_company(
                 description=insight.description,
                 suggested_prompt=insight.suggested_prompt,
                 urgency=insight.urgency,
+                insight_type="morning",
                 summary=briefing.summary if i == 0 else None,
             ))
 
@@ -163,12 +223,38 @@ async def send_morning_emails_for_all_companies() -> None:
                 for ins in all_insights
             ]
 
+            # Fetch top tax_eye insight for email banner
+            top_tax = None
+            try:
+                tax_result = await db.execute(
+                    select(ProactiveInsight)
+                    .where(
+                        ProactiveInsight.company_id == company_id,
+                        ProactiveInsight.insight_type == "tax_eye",
+                        ProactiveInsight.is_dismissed == False,
+                        ProactiveInsight.estimated_savings.isnot(None),
+                    )
+                    .order_by(ProactiveInsight.estimated_savings.desc())
+                    .limit(1)
+                )
+                tax_ins = tax_result.scalar_one_or_none()
+                if tax_ins:
+                    top_tax = {
+                        "title": tax_ins.title,
+                        "description": tax_ins.description,
+                        "legal_basis": tax_ins.legal_basis,
+                        "estimated_savings": float(tax_ins.estimated_savings) if tax_ins.estimated_savings else None,
+                    }
+            except Exception:
+                pass
+
             for user in users:
                 send_briefing_email(
                     to_email=user.email,
                     company_name=company_name,
                     summary=summary,
                     insights=insights_data,
+                    top_tax_insight=top_tax,
                 )
 
     logger.info("[MorningEmail] ═══ Wysyłka zakończona ═══")

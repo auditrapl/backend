@@ -18,6 +18,7 @@ from sqlalchemy import select, func, case, and_
 
 from app.models import CompanyContextModel, Invoice
 from app.services.cashflow_engine import CashflowForecast
+from app.services.context_canonical import FieldSource
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +92,8 @@ class OperationalContext(BaseModel):
     cashflow_forecast: "CashflowForecast" = Field(default_factory=lambda: CashflowForecast())
     operational_version: int = Field(default=1)
     last_ai_extraction: Optional[datetime] = None
+    # Source tracking per field — skąd pochodzi dana wartość
+    field_sources: dict[str, FieldSource] = Field(default_factory=dict)
 
 
 # ==============================================================================
@@ -209,7 +212,8 @@ async def classify_conversation_intent(text: str) -> ConversationIntent:
                 temperature=0.0,
             ),
         )
-        return ConversationIntent.model_validate_json(response.text)
+        from app.services._json_parse import safe_model_validate_json
+        return safe_model_validate_json(ConversationIntent, response.text)
     except Exception as e:
         logger.warning(f"[Intent Classifier] Błąd klasyfikacji, fallback → question (bezpieczny): {e}")
         return ConversationIntent(intent="question", reasoning=f"Fallback z powodu błędu: {e}")
@@ -243,7 +247,8 @@ ZASADY:
             temperature=0.0,
         ),
     )
-    return OperationalContext.model_validate_json(response.text)
+    from app.services._json_parse import safe_model_validate_json
+    return safe_model_validate_json(OperationalContext, response.text)
 
 
 # ==============================================================================
@@ -521,6 +526,9 @@ async def refresh_safecash_background(company_id_str: str):
     try:
         async with AsyncSessionLocal() as db:
             await refresh_financial_metrics(db, uuid.UUID(company_id_str))
+        # Invalidate memory cache so next agent call gets fresh L2 data
+        from app.services.agent_tools import invalidate_memory_cache
+        invalidate_memory_cache(company_id_str)
     except Exception as e:
         logger.warning(f"[Metrics] Refresh failed for {company_id_str}: {e}")
 

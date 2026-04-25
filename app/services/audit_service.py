@@ -9,6 +9,7 @@ import logging
 from datetime import datetime
 from uuid import UUID
 
+import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_
 from google import genai
@@ -30,6 +31,34 @@ else:
 
 # ── Concurrency limiter for batch processing ──────────────────
 _SEMAPHORE = asyncio.Semaphore(3)
+
+
+# ── Resolver redirectow Google grounding → prawdziwe URL-e ────
+async def _resolve_google_redirects(urls: list[str], timeout_s: float = 3.0) -> dict[str, str]:
+    """
+    Gemini Grounding zwraca trackingowe redirecty (vertexaisearch.cloud.google.com/...).
+    Ten resolver wykonuje HEAD/GET i podaza za redirectami az do prawdziwego URL-a
+    (isap.sejm.gov.pl, podatki.gov.pl, itd). Rownolegle, z timeoutem.
+    Zwraca mape redirect_url → final_url. W razie bledu zwraca oryginalny URL.
+    """
+    if not urls:
+        return {}
+
+    async def _resolve_one(client: httpx.AsyncClient, url: str) -> tuple[str, str]:
+        try:
+            resp = await client.head(url, follow_redirects=True, timeout=timeout_s)
+            final = str(resp.url)
+            if final and final != url:
+                return url, final
+            # Fallback: GET bo niektorzy serverzy nie honoruja HEAD
+            resp = await client.get(url, follow_redirects=True, timeout=timeout_s)
+            return url, str(resp.url) or url
+        except Exception:
+            return url, url  # zachowaj oryginal gdy resolve sie nie uda
+
+    async with httpx.AsyncClient(headers={"User-Agent": "Auditra/1.0"}) as hc:
+        results = await asyncio.gather(*[_resolve_one(hc, u) for u in urls], return_exceptions=False)
+    return dict(results)
 
 # ── Prompt Template (from agent_risk.py) ──────────────────────
 AUDIT_PROMPT_TEMPLATE = """
@@ -120,17 +149,27 @@ KROK 2: MATEMATYKA FORENSYCZNA
 - Przelicz każdą pozycję: `Netto * (1 + Stawka_VAT)`.
 - Porównaj wynik z `Brutto`. Tolerancja: 0.02 PLN.
 
-KROK 3: AUTONOMICZNE BADANIE PRAWNE (LIVE SEARCH 2026)
-Nie używaj wbudowanych reguł. Dla każdej pozycji faktury wykonaj zapytanie do Google, aby ustalić jej status w 2026 roku:
-A. STATUS VAT: Wpisz w Google: `"[Nazwa towaru/usługi] odliczenie VAT 2026 zasady"`.
-   - Sprawdź, czy istnieją ustawowe wyłączenia (np. usługi noclegowe, gastronomia).
-   - Sprawdź zasady dla samochodów (użytek mieszany vs 100%).
-B. STATUS KOSZTOWY (CIT/PIT): Wpisz w Google: `"[Nazwa towaru] koszt uzyskania przychodu 2026"`.
-   - Sprawdź, czy to nie jest Reprezentacja (NKUP).
-   - Sprawdź limity amortyzacji (np. dla środków trwałych > 10k PLN).
+KROK 3: AUTONOMICZNE BADANIE PRAWNE (GOOGLE SEARCH GROUNDING — AKTYWNE)
+Masz WŁĄCZONE narzędzie Google Search — WYKORZYSTAJ JE rzeczywiście, nie udawaj.
+Dla kazdej pozycji faktury wykonaj realne zapytania weryfikujace stan prawny na biezacy miesiac:
+
+A. STATUS VAT — zapytania Google (PREFERUJ domeny rzadowe):
+   - `site:podatki.gov.pl "[Nazwa towaru]" odliczenie VAT 2026`
+   - `site:isap.sejm.gov.pl art. 88 VAT wylaczenia 2026`
+   - Sprawdz ustawowe wylaczenia (uslugi noclegowe, gastronomia) i zasady dla samochodow.
+B. STATUS KOSZTOWY (CIT/PIT):
+   - `site:podatki.gov.pl "[Nazwa towaru]" koszt uzyskania przychodu 2026`
+   - `site:eureka.mf.gov.pl interpretacja [Nazwa towaru]`
+   - Sprawdz kwalifikacje jako reprezentacja (NKUP), limity amortyzacji (srodki trwale > 10k PLN).
 C. WYMOGI FORMALNE (MPP/KSeF):
-   - Jeśli Brutto > 15 000 PLN, sprawdź w Google: `"[Nazwa towaru] załącznik nr 15 VAT MPP"`.
-   - Sprawdź aktualne wymogi KSeF dla daty luty 2026.
+   - Jesli Brutto > 15 000 PLN: `site:isap.sejm.gov.pl zalacznik nr 15 VAT MPP`
+   - Biezace wymogi KSeF: `site:ksef.mf.gov.pl harmonogram obligatoryjny 2026`
+
+ZASADY CYTOWANIA (gdy uzywasz Google Search):
+- Cytuj WYLACZNIE realne URLs zwrocone przez wyszukiwarke (narzedzie zwraca metadata — korzystaj z nich).
+- NIE halucynuj adresow (np. nie wymyslaj nieistniejacych numerow dokumentow).
+- Jesli nie znalazles zrodla → napisz wprost w `legal_findings`: "Brak jednoznacznego zrodla; bazuje na ogolnych zasadach art. X".
+- Preferuj domeny: isap.sejm.gov.pl, podatki.gov.pl, eureka.mf.gov.pl, ksef.mf.gov.pl.
 
 KROK 4: SYNTEZA I WERDYKT
 - Porównaj wyniki Twojego wyszukiwania z danymi na fakturze.
@@ -192,11 +231,21 @@ W polu `recommendation` napisz wprost: "Niespójność profilu dostawcy z usług
 Twoim zadaniem jest budowanie absolutnego zaufania (Trust Authority). Użytkownik nie wierzy Ci na słowo – użytkownik wierzy Linkom Rządowym.
 Każda Twoja rekomendacja podatkowa (np. "Brak odliczenia VAT", "Limit 50%", "Wymóg KSeF") musi być poparta konkretnym linkiem do źródła.
 
+**MAPA USTAW → ISAP URL (UŻYWAJ TYCH LINKÓW, NIE WYMYŚLAJ):**
+- Ustawa o VAT: https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=WDU20040540535
+- Ustawa o CIT: https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=WDU19920210086
+- Ustawa o PIT: https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=WDU19910800350
+- Ustawa o KSeF: https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=WDU20230001598
+- Ustawa o rachunkowości: https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=WDU19940210591
+- Ordynacja podatkowa: https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=WDU19970780483
+- Ustawa o ZUS: https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=WDU19981370887
+- Ustawa o IP Box: (część ustawy o CIT, art. 24d-24e) — użyj linku CIT powyżej
+
 **ZASADY GENEROWANIA ŹRÓDEŁ:**
 
 1.  **FORMAT JSON:**
     W obiekcie wyjściowym JSON, w polu `sources`, generuj listę obiektów według schematu:
-    `{{ "id": "[x]", "title": "Nazwa Aktu / Artykułu", "url": "BEZPOŚREDNI_LINK" }}`
+    `{{ "id": "[x]", "title": "Nazwa Aktu / Artykułu", "url": "BEZPOŚREDNI_LINK_Z_MAPY_POWYŻEJ" }}`
 
 2.  **WYMAGANE DOMENY (WHITELIST):**
     Korzystaj wyłącznie z oficjalnych, stabilnych źródeł rządowych.
@@ -396,24 +445,83 @@ class AuditService:
             db.add(log_start)
             await db.commit()
 
-            # Call Gemini
+            # Call Gemini z Google Search grounding — AI weryfikuje przepisy VAT/CIT/PIT/KSeF
+            # w czasie rzeczywistym na MF/ISAP/podatki.gov.pl. UWAGA: Gemini nie pozwala laczyc
+            # `response_mime_type=json` z grounding — wiec polegamy na strict-JSON w prompcie
+            # + defensywny parser (findFirst '{' ... lastIndex '}').
             response = client.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     temperature=0.0,
-                    response_mime_type="application/json",
+                    tools=[types.Tool(google_search=types.GoogleSearch())],
                 ),
             )
 
-            raw_text = response.text
-            # Strip markdown fences if present
-            if "```json" in raw_text:
-                raw_text = raw_text.split("```json")[1].split("```")[0]
-            elif "```" in raw_text:
-                raw_text = raw_text.split("```")[1].split("```")[0]
+            # Track token usage (grounding cost = $0.035 per request poza 1500/day free tier)
+            from app.services.token_tracker import track_and_accumulate
+            track_and_accumulate(response, "gemini-2.5-flash", f"audit_invoice_{invoice.id}")
 
-            audit_result_json = json.loads(raw_text.strip())
+            raw_text = response.text or ""
+            # Strip markdown fences
+            if "```json" in raw_text:
+                raw_text = raw_text.split("```json", 1)[1].split("```", 1)[0]
+            elif "```" in raw_text:
+                raw_text = raw_text.split("```", 1)[1].split("```", 1)[0]
+            raw_text = raw_text.strip()
+
+            # Defensywny parser: znajdz pierwszy '{' i ostatni '}' — Gemini z grounding
+            # czasem dodaje preambule/postscriptum mimo strict-JSON instruction.
+            try:
+                audit_result_json = json.loads(raw_text)
+            except json.JSONDecodeError:
+                first_brace = raw_text.find("{")
+                last_brace = raw_text.rfind("}")
+                if first_brace != -1 and last_brace > first_brace:
+                    audit_result_json = json.loads(raw_text[first_brace : last_brace + 1])
+                else:
+                    raise
+
+            # Wyciagnij metadane groundingu (cytowane zrodla MF/ISAP z live search)
+            # i rozwin redirecty Google'a na prawdziwe URL-e (podatki.gov.pl, isap.sejm.gov.pl, ...)
+            try:
+                raw_sources = []
+                candidates = getattr(response, "candidates", None) or []
+                if candidates:
+                    gmeta = getattr(candidates[0], "grounding_metadata", None)
+                    if gmeta:
+                        chunks = getattr(gmeta, "grounding_chunks", None) or []
+                        for ch in chunks:
+                            web = getattr(ch, "web", None)
+                            if web:
+                                raw_sources.append({
+                                    "title": getattr(web, "title", "") or "",
+                                    "uri": getattr(web, "uri", "") or "",
+                                })
+
+                if raw_sources:
+                    # Rozwin redirecty → prawdziwe URL-e. Rownolegle, timeout 3s.
+                    redirect_urls = [s["uri"] for s in raw_sources if s["uri"]]
+                    url_map = await _resolve_google_redirects(redirect_urls, timeout_s=3.0)
+                    for s in raw_sources:
+                        resolved = url_map.get(s["uri"], s["uri"])
+                        s["uri"] = resolved
+                        # title jesli jest pusty/generyczny → uzyj domeny z rozwinietego URL-a
+                        if not s["title"] and resolved:
+                            try:
+                                from urllib.parse import urlparse
+                                s["title"] = urlparse(resolved).netloc or resolved
+                            except Exception:
+                                pass
+
+                    audit_result_json["_grounding_sources"] = raw_sources
+                    logger.info(
+                        f"🔍 Grounding: {len(raw_sources)} zrodel dla faktury {invoice.id} "
+                        f"(redirecty rozwiniete)"
+                    )
+            except Exception as gex:
+                logger.warning(f"Grounding metadata extract failed: {gex}")
+
             logger.info(f"✅ AI Analysis complete for invoice {invoice.id}")
 
             # Extract risk_score
@@ -443,6 +551,60 @@ class AuditService:
             elif dept_assignment and dept_assignment.get("is_new_department"):
                 # AI suggests new department — keep in ai_analysis_json for frontend notification
                 logger.info(f"💡 AI suggests new department '{dept_assignment.get('department_name')}' for invoice {invoice.id}")
+
+            # ── TAX EYE: generuj ProactiveInsight jesli znaleziono optymalizacje ──
+            try:
+                from app.models import ProactiveInsight
+                legal_raw = audit_result_json.get("legal_basis") or audit_result_json.get("audit_result", {}).get("legal_basis", "")
+                recommendation = audit_result_json.get("recommendation") or audit_result_json.get("audit_result", {}).get("recommendation", "")
+
+                # Format legal_basis z sources URL-ami
+                legal = ""
+                if isinstance(legal_raw, dict):
+                    parts = []
+                    if legal_raw.get("article"):
+                        parts.append(legal_raw["article"])
+                    for src in legal_raw.get("sources", []):
+                        if isinstance(src, dict) and src.get("title"):
+                            url = src.get("url", "")
+                            parts.append(f"{src['title']} — {url}" if url else src["title"])
+                    legal = " | ".join(parts) if parts else str(legal_raw)
+                elif legal_raw:
+                    legal = str(legal_raw)
+                findings = audit_result_json.get("audit_result", {}).get("findings", [])
+
+                # Generuj insight jesli: risk_score > 30 LUB sa findings z recommendation
+                if (risk_score > 30 or recommendation) and invoice.company_id:
+                    savings_hint = 0.0
+                    # Prosta heurystyka: jesli VAT issue → savings = vat_amount, jesli CIT → 9-19% net
+                    for finding in (findings if isinstance(findings, list) else []):
+                        f_text = str(finding).lower() if finding else ""
+                        if "vat" in f_text and invoice.vat_amount:
+                            savings_hint += float(invoice.vat_amount)
+                        elif "kup" in f_text or "cit" in f_text:
+                            if invoice.net_amount:
+                                savings_hint += float(invoice.net_amount) * 0.09  # CIT 9% savings
+
+                    if recommendation or savings_hint > 0:
+                        title = f"Optymalizacja: {invoice.contractor_name or 'Faktura'} ({invoice.gross_amount or 0:.0f} PLN)"
+                        desc = recommendation[:500] if recommendation else f"Risk score {risk_score}/100. Wykryto {len(findings)} ustalen."
+                        prompt = f"Przeanalizuj fakture od {invoice.contractor_name} na kwote {invoice.gross_amount} PLN. {recommendation[:200]}"
+
+                        insight = ProactiveInsight(
+                            company_id=invoice.company_id,
+                            title=title[:200],
+                            description=desc,
+                            suggested_prompt=prompt,
+                            urgency="high" if risk_score > 70 else "medium" if risk_score > 40 else "low",
+                            insight_type="tax_eye",
+                            legal_basis=legal[:500] if legal else None,
+                            estimated_savings=savings_hint if savings_hint > 0 else None,
+                            source_invoice_id=invoice.id,
+                        )
+                        db.add(insight)
+                        logger.info(f"Tax Eye: insight for invoice {invoice.id}, savings ~{savings_hint:.0f} PLN")
+            except Exception as tex:
+                logger.warning(f"Tax Eye insight creation failed: {tex}")
 
             # Log completion
             status_label = audit_result_json.get("audit_result", {}).get("status", "UNKNOWN")

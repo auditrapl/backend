@@ -11,7 +11,7 @@ from app.schemas import TaxAnalysisReport, TaxRequest
 
 logger = logging.getLogger(__name__)
 
-MODEL_NAME = "gemini-2.5-pro"
+MODEL_NAME = "gemini-2.5-flash"
 
 SYSTEM_PROMPT = """Jesteś zaawansowanym Analitykiem Podatkowym AI specjalizującym się w polskim prawie podatkowym (VAT, CIT, PIT, WHT). 
 Twoim zadaniem jest generowanie zwięzłych, wysoce merytorycznych i ustrukturyzowanych analiz podatkowych na podstawie zapytań użytkownika. 

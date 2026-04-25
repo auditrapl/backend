@@ -34,17 +34,10 @@ async def simulate_cfo_scenario(
         # Assuming the company_id is bound or we pass a default from current_user's company bounds
         company_uuid = str(getattr(current_user, "company_id", "00000000-0000-0000-0000-000000000000"))
         
-        # ─── PAMIĘĆ KONWERSACYJNA (Ciche uczenie się w tle z czatu) ───
-        async def background_chat_upsert(c_id: str, prompt_text: str):
-            async with AsyncSessionLocal() as bg_db:
-                try:
-                    import uuid
-                    await process_and_upsert_operational(bg_db, uuid.UUID(c_id), prompt_text)
-                except Exception as ex:
-                    print(f"Błąd podczas analizy prompta 'Implicit Learning': {ex}")
-                    
-        background_tasks.add_task(background_chat_upsert, company_uuid, request.prompt)
-        # ──────────────────────────────────────────────────────────────
+        # ─── PAMIĘĆ KONWERSACYJNA ───
+        # Implicit learning przeniesione do agentic_cfo_stream() —
+        # uruchamiane PO triage, tylko dla route != "strategic_debate".
+        # ─────────────────────────────────────────────────────────────
         
         async def event_generator():
             try:
@@ -169,8 +162,16 @@ async def generate_morning_briefing_manual(
     if not context_record:
         raise HTTPException(status_code=400, detail="Brak kontekstu firmy. Dodaj dokumenty lub faktury.")
 
+    ctx_data = context_record.context_data or {}
+    canonical = ctx_data.get("canonical", {})
+    operational = ctx_data.get("operational", {})
+    has_identity = bool(canonical.get("company_identity", {}).get("name"))
+    has_financials = bool(operational.get("live_financial_pulse", {}).get("mrr"))
+    if not has_identity and not has_financials:
+        raise HTTPException(status_code=400, detail="Za mało danych do wygenerowania briefingu. Dodaj dokumenty, faktury lub uzupełnij profil firmy.")
+
     # ── Generuj odprawę ──
-    await generate_briefing_for_company(db, company_uuid, context_record.context_data or {})
+    await generate_briefing_for_company(db, company_uuid, ctx_data)
 
     # ── Zwróć świeże insighty ──
     result = await db.execute(

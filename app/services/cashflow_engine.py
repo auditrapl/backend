@@ -1,17 +1,20 @@
 """
 Silnik Cashflow — prognoza, kalendarz podatkowy, DSO kontrahentów.
-Wywoływany w background task po każdej zmianie faktury.
+compute_snapshot() = SINGLE SOURCE OF TRUTH dla metryk finansowych.
+Dashboard, AI, Briefing, Insights — wszystko z tego.
 """
 import uuid
+import time as _time
 from datetime import date, datetime, timezone, timedelta
+from decimal import Decimal
 from typing import Optional, List
 
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, case, and_
+from sqlalchemy import select, func, case, and_, text
 import logging
 
-from app.models import Invoice, CompanyContextModel
+from app.models import Invoice, CompanyContextModel, Department
 from app.services.context_canonical import CanonicalContext, get_or_create_canonical
 
 logger = logging.getLogger(__name__)
@@ -519,3 +522,290 @@ async def calculate_cashflow_forecast(
         direction_score=round(direction, 1),
         ceo_monthly_goal=existing_ceo_goal,
     )
+
+
+# ==============================================================================
+# SNAPSHOT CACHE — in-memory, 60s TTL
+# ==============================================================================
+
+_snapshot_cache: dict[str, tuple[float, "FinancialSnapshot"]] = {}
+_SNAPSHOT_TTL = 60.0
+
+
+def invalidate_snapshot_cache(company_id: str | uuid.UUID):
+    """Explicit cache invalidation — po zmianie faktury, declared_balance, etc."""
+    key = str(company_id)
+    _snapshot_cache.pop(key, None)
+    logger.info(f"[Snapshot] Cache invalidated for {key}")
+
+
+# ==============================================================================
+# COMPUTE SNAPSHOT — Single Source of Truth
+# ==============================================================================
+
+async def get_snapshot(company_id: str | uuid.UUID, db: AsyncSession | None = None) -> "FinancialSnapshot":
+    """
+    Lazy compute + cache. Jedyny punkt wejścia dla metryk finansowych.
+    Dashboard, AI, Briefing, Insights — wszystko woła TO.
+    """
+    key = str(company_id)
+    now = _time.monotonic()
+
+    # Cache hit?
+    if key in _snapshot_cache:
+        ts, cached = _snapshot_cache[key]
+        if now - ts < _SNAPSHOT_TTL:
+            return cached
+
+    # Cache miss — compute
+    if db is None:
+        from app.database import AsyncSessionLocal
+        async with AsyncSessionLocal() as db:
+            snapshot = await compute_snapshot(db, uuid.UUID(key))
+    else:
+        snapshot = await compute_snapshot(db, uuid.UUID(key))
+
+    _snapshot_cache[key] = (now, snapshot)
+    return snapshot
+
+
+async def compute_snapshot(db: AsyncSession, company_id: uuid.UUID) -> "FinancialSnapshot":
+    """
+    Liczy WSZYSTKIE metryki finansowe w jednym przebiegu.
+    Jedna funkcja = jedna prawda. Zero różnic między modułami.
+    """
+    from app.schemas_financial import (
+        FinancialSnapshot, CashMetrics, RevenueMetrics, ExpenseMetrics,
+        ForecastMetrics, ObligationsMetrics, TimeboxedMetric,
+        CashDiscrepancy, Contractor, DepartmentExpense, CategoryExpense, UpcomingPayment,
+    )
+    from app.services.context_operational import calculate_safecash, calculate_invoice_metrics
+
+    now = datetime.utcnow()
+    cid = company_id
+
+    # ── 1. SafeCash + receivables/payables ──
+    sc_data = await calculate_safecash(db, cid)
+    safecash = sc_data["safecash"]
+    receivables = sc_data["receivables"]
+    payables = sc_data["payables"]
+
+    # ── 2. Declared balance ──
+    declared = None
+    declared_at = None
+    try:
+        dr = await db.execute(text(
+            "SELECT balance, as_of FROM declared_balances WHERE company_id = :c ORDER BY created_at DESC LIMIT 1"
+        ), {"c": str(cid)})
+        row = dr.fetchone()
+        if row:
+            declared = float(row[0])
+            declared_at = row[1] if isinstance(row[1], datetime) else datetime.combine(row[1], datetime.min.time())
+    except Exception:
+        await db.rollback()  # Rollback failed transaction so next queries work
+
+    # ── 3. Primary value — hierarchia bank > declared > safecash ──
+    # Bank sync = Q3, for now always None
+    bank_balance = None
+    if bank_balance is not None:
+        primary_value = bank_balance
+        primary_source = "bank"
+        primary_confidence = "high"
+    elif declared is not None and declared_at and (now - declared_at).days < 30:
+        primary_value = declared
+        primary_source = "declared"
+        primary_confidence = "medium"
+    elif safecash is not None:
+        primary_value = safecash
+        primary_source = "safecash"
+        primary_confidence = "low"
+    else:
+        primary_value = 0.0
+        primary_source = "none"
+        primary_confidence = "low"
+
+    # ── 4. Discrepancies ──
+    discrepancies = []
+    if safecash and declared and abs(safecash - declared) > 0.2 * abs(safecash):
+        diff = declared - safecash
+        discrepancies.append(CashDiscrepancy(
+            metric_a="safecash",
+            metric_b="declared_balance",
+            value_a=safecash,
+            value_b=declared,
+            difference_pln=round(diff, 2),
+            difference_pct=round(diff / abs(safecash) * 100, 1) if safecash else 0,
+            severity="warning" if abs(diff) < abs(safecash) * 0.5 else "critical",
+            likely_cause="Prawdopodobnie: pensje, podatki, kredyty lub transakcje pozafakturowe" if diff > 0
+                else "Nieopłacone faktury w systemie lub błędne dane",
+        ))
+
+    cash = CashMetrics(
+        safecash=safecash,
+        safecash_as_of=now,
+        declared_balance=declared,
+        declared_at=declared_at,
+        bank_balance=bank_balance,
+        primary_value=primary_value,
+        primary_source=primary_source,
+        primary_confidence=primary_confidence,
+        receivables_total=receivables,
+        payables_total=payables,
+        receivables_overdue_30d=0.0,
+        discrepancies=discrepancies,
+    )
+
+    # ── 5. Invoice metrics (revenue + expenses) ──
+    inv_metrics, overdue_30d = await calculate_invoice_metrics(db, cid)
+    cash.receivables_overdue_30d = overdue_30d
+
+    revenue = RevenueMetrics(
+        current_month=TimeboxedMetric(value=inv_metrics.monthly_revenue or 0, timeframe="monthly", as_of=now, source="invoices"),
+        prev_month=TimeboxedMetric(value=inv_metrics.prev_month_revenue or 0, timeframe="monthly", source="invoices"),
+        mom_change_pct=inv_metrics.revenue_mom_growth_pct,
+        mrr=TimeboxedMetric(value=inv_metrics.auto_mrr or 0, timeframe="3m_avg", as_of=now, source="invoices"),
+        mrr_mom_change_pct=inv_metrics.revenue_mom_growth_pct,
+        concentration_top3_pct=inv_metrics.top3_concentration_pct or 0,
+        invoice_count=inv_metrics.invoice_count or 0,
+        last_invoice_date=inv_metrics.metrics_updated_at,
+    )
+
+    # Top contractors
+    try:
+        tc_result = await db.execute(text("""
+            SELECT contractor_name, contractor_nip, SUM(gross_amount) as total
+            FROM invoices WHERE company_id = :c AND invoice_type = 'income'
+            GROUP BY contractor_name, contractor_nip
+            ORDER BY total DESC LIMIT 5
+        """), {"c": str(cid)})
+        total_rev = revenue.current_month.value * 4 or 1  # avoid /0
+        revenue.top_contractors = [
+            Contractor(name=r[0] or "?", nip=r[1], revenue_pln=float(r[2] or 0),
+                       share_pct=round(float(r[2] or 0) / total_rev * 100, 1) if total_rev else 0)
+            for r in tc_result.fetchall()
+        ]
+    except Exception:
+        pass
+
+    # ── 6. Expenses + departments ──
+    expenses = ExpenseMetrics(
+        current_month=TimeboxedMetric(value=inv_metrics.monthly_expenses or 0, timeframe="monthly", as_of=now, source="invoices"),
+        burn_rate_3m=TimeboxedMetric(value=inv_metrics.auto_burn_rate or 0, timeframe="3m_avg", as_of=now, source="invoices"),
+        payables_total=payables,
+        payables_overdue=overdue_30d,
+    )
+
+    # Department breakdown — only if >50% assigned
+    try:
+        dept_result = await db.execute(text("""
+            SELECT d.name, SUM(i.net_amount) as total, COUNT(i.id) as cnt
+            FROM invoices i JOIN departments d ON i.department_id = d.id
+            WHERE i.company_id = :c AND i.invoice_type = 'expense'
+            GROUP BY d.name ORDER BY total DESC
+        """), {"c": str(cid)})
+        dept_rows = dept_result.fetchall()
+
+        total_count_result = await db.execute(text(
+            "SELECT COUNT(*) FROM invoices WHERE company_id = :c AND invoice_type = 'expense'"
+        ), {"c": str(cid)})
+        total_expense_count = total_count_result.scalar() or 1
+        assigned_count = sum(r[2] for r in dept_rows)
+
+        coverage = assigned_count / total_expense_count if total_expense_count else 0
+        expenses.department_coverage_pct = round(coverage * 100, 1)
+
+        if coverage >= 0.5 and dept_rows:
+            total_dept = sum(float(r[1] or 0) for r in dept_rows)
+            expenses.by_department = [
+                DepartmentExpense(
+                    department_name=r[0], total_pln=float(r[1] or 0), invoice_count=r[2],
+                    share_pct=round(float(r[1] or 0) / total_dept * 100, 1) if total_dept else 0
+                ) for r in dept_rows
+            ]
+    except Exception as e:
+        logger.warning(f"[Snapshot] Department breakdown failed: {e}")
+
+    # Category breakdown (AI-inferred)
+    try:
+        cat_result = await db.execute(text("""
+            SELECT category_name, category_source, SUM(net_amount) as total, COUNT(*) as cnt
+            FROM invoices WHERE company_id = :c AND invoice_type = 'expense' AND category_name IS NOT NULL
+            GROUP BY category_name, category_source ORDER BY total DESC
+        """), {"c": str(cid)})
+        cat_rows = cat_result.fetchall()
+        if cat_rows:
+            expenses.by_category = [
+                CategoryExpense(category_name=r[0], source=r[1] or "ai_inferred", total_pln=float(r[2] or 0), invoice_count=r[3])
+                for r in cat_rows
+            ]
+    except Exception:
+        pass
+
+    # ── 7. Forecast ──
+    burn = inv_metrics.auto_burn_rate or 0
+    mrr = inv_metrics.auto_mrr or 0
+    net_monthly = mrr - burn if mrr and burn else None
+
+    forecast = ForecastMetrics(
+        net_cashflow_monthly=round(net_monthly, 2) if net_monthly else None,
+        forecast_30d=round(primary_value + (net_monthly or 0), 2) if net_monthly else None,
+        forecast_60d=round(primary_value + (net_monthly or 0) * 2, 2) if net_monthly else None,
+        forecast_90d=round(primary_value + (net_monthly or 0) * 3, 2) if net_monthly else None,
+    )
+
+    # Runway
+    if burn and burn > mrr and primary_value > 0:
+        net_burn = burn - mrr
+        forecast.runway_weeks = int((primary_value / net_burn) * 4.33)
+        forecast.runway_confidence = "medium" if forecast.runway_weeks > 12 else "low"
+    elif mrr >= burn:
+        forecast.runway_weeks = 999  # profitable
+        forecast.runway_confidence = "high"
+
+    # Safe burn limit from existing forecast
+    try:
+        cf = await calculate_cashflow_forecast(db, cid, safecash=safecash, auto_mrr=mrr, auto_burn_rate=burn)
+        forecast.safe_burn_limit = cf.safe_burn_limit
+    except Exception:
+        pass
+
+    # ── 8. Obligations ──
+    obligations = ObligationsMetrics()
+    try:
+        canonical = await get_or_create_canonical(db, cid)
+        tax_cal = generate_tax_calendar(canonical, months_ahead=2, vat_monthly_estimate=None, cit_annual_estimate=None)
+        upcoming = [t for t in tax_cal if not t.is_paid and t.date >= date.today()]
+        obligations.upcoming_payments = [
+            UpcomingPayment(date=t.date, label=t.label, amount=t.estimated_amount, type="tax")
+            for t in upcoming[:10]
+        ]
+        if upcoming:
+            obligations.next_deadline = upcoming[0].date
+            obligations.total_next_30d = sum(t.estimated_amount or 0 for t in upcoming if t.date <= date.today() + timedelta(days=30))
+        # VAT/CIT from tax calendar
+        vat_entries = [t for t in upcoming if "VAT" in t.tax_type]
+        cit_entries = [t for t in upcoming if "CIT" in t.tax_type]
+        if vat_entries and vat_entries[0].estimated_amount:
+            obligations.vat_to_pay = vat_entries[0].estimated_amount
+        if cit_entries and cit_entries[0].estimated_amount:
+            obligations.cit_estimated = cit_entries[0].estimated_amount
+    except Exception as e:
+        logger.warning(f"[Snapshot] Obligations failed: {e}")
+
+    # ── BUILD SNAPSHOT ──
+    snapshot = FinancialSnapshot(
+        company_id=cid,
+        computed_at=now,
+        cash=cash,
+        revenue=revenue,
+        expenses=expenses,
+        forecast=forecast,
+        obligations=obligations,
+    )
+
+    logger.info(
+        f"[Snapshot] {cid} → cash={primary_value:.0f} ({primary_source}), "
+        f"mrr={mrr:.0f}, burn={burn:.0f}, runway={forecast.runway_weeks}w"
+    )
+
+    return snapshot

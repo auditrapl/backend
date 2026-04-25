@@ -153,6 +153,7 @@ class InvoiceResponse(BaseModel):
     is_vat_exempt: bool
     department_id: Optional[UUID]
     category_name: Optional[str]
+    category_source: str = "ai_inferred"
     is_paid: bool
     due_date: Optional[datetime]
     payment_date: Optional[datetime]
@@ -184,6 +185,10 @@ class DepartmentInvoiceResponse(BaseModel):
     contractor_name: Optional[str]
     issue_date: Optional[datetime]
     net_amount: Optional[Decimal]
+    gross_amount: Optional[Decimal] = None
+    status: Optional[str] = None
+    is_paid: Optional[bool] = None
+    invoice_type: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
 class BatchAuditResponse(BaseModel):
@@ -253,7 +258,13 @@ class DepartmentBudgetResponse(BaseModel):
     id: UUID
     name: str
     monthly_limit: Optional[Decimal]
+    # Koszty bieżącego miesiąca (invoice_type == "expense")
     current_spent: Decimal
+    # Przychody bieżącego miesiąca (invoice_type == "income")
+    current_earned: Decimal = Decimal(0)
+    # Charakter oddziału wg historycznego rozkładu faktur (ostatnie 90 dni):
+    # "cost" | "revenue" | "mixed" | "empty"
+    department_type: str = "empty"
     model_config = ConfigDict(from_attributes=True)
 
 # Anomaly Schemas
@@ -345,6 +356,7 @@ class CfoReport(BaseModel):
 class CfoRequest(BaseModel):
     prompt: str
     document_ids: list[str] = Field(default_factory=list, description="IDs dokumentów (z tabeli documents) załączonych przez użytkownika")
+    insight_id: Optional[str] = Field(None, description="ID ProactiveInsight — wstrzykuje kontekst insightu do agenta")
 
 class SharedCfoReportCreate(BaseModel):
     prompt: Optional[str] = None
@@ -402,14 +414,14 @@ class PaymentEvent(BaseModel):
 # ── Single UIBlock schema (Flattened to avoid Gemini Union/Discriminator Schema errors) ──
 
 class UIBlock(BaseModel):
-    block_type: str = Field(description="Typ klocka: 'alert_banner', 'text_card', 'chart', 'metric_grid', 'timeline', 'data_table', 'parsed_data_list', 'scoring', 'carousel', 'swot_analysis', 'decision_tree', 'payment_calendar'")
+    block_type: str = Field(description="Typ klocka: 'alert_banner', 'text_card', 'chart', 'metric_grid', 'timeline', 'data_table', 'parsed_data_list', 'scoring', 'carousel', 'swot_analysis', 'decision_tree', 'payment_calendar', 'date_range_request'")
     title: Optional[str] = Field(None, description="Tytuł klocka")
     subtitle: Optional[str] = None
     body: Optional[str] = Field(None, description="Główna treść tekstowa")
     message: Optional[str] = Field(None, description="Treść wiadomości (alert_banner)")
     urgency: Optional[str] = Field(None, description="Wybór: 'high', 'medium', 'low', 'success'")
     theme: Optional[str] = Field(None, description="Wybór: 'neutral', 'success', 'warning', 'danger'")
-    chart_type: Optional[str] = Field(None, description="Wybór: 'line', 'area', 'prediction_band', 'bar_vertical', 'bar_horizontal', 'waterfall', 'donut', 'pie'")
+    chart_type: Optional[str] = Field(None, description="Wybór: 'line', 'area', 'prediction_band', 'bar_vertical', 'bar_horizontal', 'waterfall', 'donut', 'pie', 'stacked_bar', 'combo'")
     data: Optional[list[ChartDataPoint]] = Field(None, description="Dane wykresu")
     series_labels: Optional[list[str]] = None
     metrics: Optional[list[MetricItem]] = None
@@ -428,12 +440,18 @@ class UIBlock(BaseModel):
     threats: Optional[list[str]] = None
     paths: Optional[list[DecisionPath]] = None
     payments: Optional[list[PaymentEvent]] = None
+    # date_range_request — interactive: AI asks user to pick dates
+    question: Optional[str] = Field(None, description="Pytanie do usera (date_range_request)")
+    picker_type: Optional[str] = Field(None, description="'range' | 'single' | 'month'")
 
 # ── MajorCfoOutput (Generative UI output) i Agentic Workflow ─────────────────
 
 class TriageDecision(BaseModel):
     route: Literal["instant", "analysis", "strategic_debate"] = Field(description="Typ zapytania: instant (proste fakty), analysis (analiza jednego zagadnienia), strategic_debate (złożone dylematy)")
+    category: Literal["analiza", "raportowanie", "strategia", "anomalie", "podatki"] = Field(description="WYMAGANE. Kategoria tematyczna zapytania: analiza | raportowanie | strategia | anomalie | podatki")
     mode: Literal["INVESTMENT", "DIAGNOSTIC"] = Field(default="DIAGNOSTIC", description="INVESTMENT jeśli użytkownik proponuje wydatek/inwestycję/zatrudnienie. DIAGNOSTIC jeśli pyta o stan/problem/analizę.")
+    question_type: Literal["single_fact", "comparison", "trend", "forecast", "diagnostic", "recommendation"] = Field(default="single_fact", description="Typ pytania: single_fact (ile/jaki), comparison (porównaj X vs Y), trend (jak się zmienia), forecast (co będzie jeśli), diagnostic (dlaczego), recommendation (co powinienem)")
+    output_complexity: Literal["simple", "multi_part", "comparison"] = Field(default="simple", description="simple=1 odpowiedź, multi_part=pytanie ma X części, comparison=porównanie N opcji")
     reasoning: str = Field(description="Krótkie uzasadnienie wyboru")
 
 class AgentTimelineStep(BaseModel):
@@ -453,9 +471,11 @@ class DashboardResponse(BaseModel):
     response_type: Literal["dashboard"]
     hero_recommendation: Optional[str] = Field(None, description="Twarde, 1-2 zdaniowe podsumowanie. To jest 'Główna Latarnia' prezentowana na górze raportu.")
     executive_summary: str = Field(description="Podsumowanie zarządcze sytuacji.")
-    major_action_plan: CfoActionPlan = Field(description="Plan działania zidentyfikowany przez agentów AI.")
-    scenarios_analysis: list[CfoScenarioAnalysis] = Field(description="Analizy scenariuszowe wykonane przez AI.")
-    layout: list[UIBlock] = Field(description="Lista komponentów interfejsu (wykresy, tabele, KPI).")
+    # Legacy fields — frontend renderuje tylko hero_recommendation, executive_summary, layout, agent_timeline.
+    # Opcjonalne aby Gemini nie failował validacji gdy nie zmieści się w tokenach / kontekście.
+    major_action_plan: Optional[CfoActionPlan] = Field(default=None, description="[Opcjonalne] Plan działania zidentyfikowany przez agentów AI.")
+    scenarios_analysis: list[CfoScenarioAnalysis] = Field(default_factory=list, description="[Opcjonalne] Analizy scenariuszowe wykonane przez AI.")
+    layout: list[UIBlock] = Field(description="Lista komponentów interfejsu (wykresy, tabele, KPI). MIN 1 blok.")
     agent_timeline: list[AgentTimelineStep] = Field(default_factory=list, description="Zbuduj narracyjną oś czasu (Timeline) krok-po-kroku, tłumacząc co Ty oraz inni agenci robiliście w tle (jakie SQL szły do bazy). Zrozumiale, dla ludzi.")
 
 class MajorCfoOutput(BaseModel):
@@ -502,12 +522,24 @@ class ProactiveInsightResponse(BaseModel):
     suggested_prompt: str
     urgency: str
     summary: str | None = None
+    insight_type: str = "morning"  # tax_eye | cfo_radar | morning
+    legal_basis: str | None = None
+    estimated_savings: float | None = None
+    source_invoice_id: UUID | None = None
+    is_dismissed: bool = False
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
 
 class MorningBriefingResponse(BaseModel):
     summary: str | None = None
     insights: list[ProactiveInsightResponse]
+
+class InsightsSummaryResponse(BaseModel):
+    total_insights: int
+    total_savings_pln: float
+    tax_eye_count: int
+    cfo_radar_count: int
+    top_insight: ProactiveInsightResponse | None = None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -522,6 +554,7 @@ class ConversationResponse(BaseModel):
     company_id: UUID
     user_id: UUID
     title: Optional[str]
+    category: Optional[str] = None
     summary: Optional[str]
     message_count: int
     is_archived: bool
@@ -533,6 +566,7 @@ class ConversationListItem(BaseModel):
     """Lekki schemat do listy wątków w sidebarze."""
     id: UUID
     title: Optional[str]
+    category: Optional[str] = None
     message_count: int
     is_archived: bool
     created_at: datetime

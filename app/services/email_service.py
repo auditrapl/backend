@@ -42,6 +42,7 @@ def build_briefing_html(
     company_name: str,
     summary: str,
     insights: list[dict],
+    top_tax_insight: dict | None = None,
 ) -> str:
     """Buduje HTML emaila Morning Briefing — full white, card-based layout."""
 
@@ -123,9 +124,20 @@ def build_briefing_html(
         <!-- Insight cards -->
         {insight_cards}
 
+        <!-- Tax Eye insight banner -->
+        {"" if not top_tax_insight else f'''
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <div style="font-size: 10px; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">&#9889; Mozliwosc optymalizacji</div>
+            <div style="font-size: 14px; font-weight: 600; color: #111827; margin-bottom: 6px;">{_bold_numbers(top_tax_insight.get("title", ""))}</div>
+            <div style="font-size: 13px; color: #6b7280; line-height: 1.5; margin-bottom: 8px;">{_bold_numbers(top_tax_insight.get("description", "")[:200])}</div>
+            {f'<div style="font-size: 12px; color: #9ca3af; font-style: italic;">{top_tax_insight.get("legal_basis", "")}</div>' if top_tax_insight.get("legal_basis") else ""}
+            {f'<div style="font-size: 16px; font-weight: 700; color: #10b981; margin-top: 8px;">+{top_tax_insight["estimated_savings"]:,.0f} PLN potencjalnych oszczednosci</div>' if top_tax_insight.get("estimated_savings") else ""}
+        </div>
+        '''}
+
         <!-- CTA -->
         <div style="text-align: center; margin: 36px 0;">
-            <a href="https://app.auditra.pl/dashboard/cfo" style="display: inline-block; background: #111827; color: #ffffff; padding: 14px 40px; border-radius: 10px; text-decoration: none; font-size: 14px; font-weight: 600; letter-spacing: 0.2px;">Otwórz dashboard</a>
+            <a href="https://app.auditra.pl/dashboard/cfo" style="display: inline-block; background: #111827; color: #ffffff; padding: 14px 40px; border-radius: 10px; text-decoration: none; font-size: 14px; font-weight: 600; letter-spacing: 0.2px;">Otworz dashboard</a>
         </div>
 
         <!-- Divider -->
@@ -153,13 +165,14 @@ def send_briefing_email(
     company_name: str,
     summary: str,
     insights: list[dict],
+    top_tax_insight: dict | None = None,
 ) -> bool:
-    """Wysyła Morning Briefing emailem przez Resend. Zwraca True jeśli sukces."""
+    """Wysyla Morning Briefing emailem przez Resend. Zwraca True jesli sukces."""
     if not resend.api_key:
         logger.warning("[Email] RESEND_API_KEY not set — skipping email")
         return False
 
-    html = build_briefing_html(company_name, summary, insights)
+    html = build_briefing_html(company_name, summary, insights, top_tax_insight)
 
     try:
         result = resend.Emails.send({

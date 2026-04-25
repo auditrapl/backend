@@ -14,8 +14,8 @@ from app.schemas import AnomalyReport, AnomalyRequest
 
 logger = logging.getLogger(__name__)
 
-# Wymuszamy wersję 2.5 Pro lub Fallback na najnowszy pro
-MODEL_NAME = "gemini-2.5-pro" 
+# Flash wszędzie — Pro zarezerwowany WYŁĄCZNIE dla CFO synthesis
+MODEL_NAME = "gemini-2.5-flash"
 
 # Configured in main.py usually, but we ensure it's set if we call it directly
 # genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))

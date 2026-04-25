@@ -62,7 +62,8 @@ async def select_best_agents(client: genai.Client, user_prompt: str) -> list[str
                 temperature=0.0,
             ),
         )
-        parsed = ActiveAgents.model_validate_json(response.text)
+        from app.services._json_parse import safe_model_validate_json
+        parsed = safe_model_validate_json(ActiveAgents, response.text)
         selected = parsed.selected_agents
         logger.info(f"[CFO Dispatcher] Wybranych agentów: {selected}")
         return selected if selected else ["VP_GROWTH", "RISK_OFFICER", "ACTUARY"]
@@ -235,7 +236,8 @@ Wypełnij wniosek scenariusza i wygeneruj 6 punktów wykresu `chart_data`.
             temperature=0.4
         )
     )
-    return CfoScenarioAnalysis.model_validate_json(response.text)
+    from app.services._json_parse import safe_model_validate_json
+    return safe_model_validate_json(CfoScenarioAnalysis, response.text)
 
 async def generate_major_cfo_recommendation(
     client: genai.Client,
@@ -275,7 +277,8 @@ Zadanie: Określ TRYB (Inwestycja vs Diagnostyka). Wyciągnij Złoty Środek. U�
             temperature=0.4
         )
     )
-    return MajorCfoLayoutOutput.model_validate_json(response.text)
+    from app.services._json_parse import safe_model_validate_json
+    return safe_model_validate_json(MajorCfoLayoutOutput, response.text)
 
 
 

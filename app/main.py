@@ -5,8 +5,9 @@ from contextlib import asynccontextmanager
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from app.database import engine, Base
+from app.telemetry import setup_telemetry
 from app.api import invoices, auth, departments, dashboard, notifications, documents, billing
-from app.api.routers import reports, strategy, anomalies, taxes, cfo, context as context_router, cashflow, conversations
+from app.api.routers import reports, strategy, anomalies, taxes, cfo, context as context_router, cashflow, conversations, onboarding, bank
 from app.services.morning_briefing import generate_daily_briefings_for_all_companies, send_morning_emails_for_all_companies
 from app.services.context_snapshots import (
     trigger_weekly_snapshots_for_all_companies,
@@ -76,6 +77,8 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+setup_telemetry(app, engine)
+
 # CORS Configuration
 import os
 _cors_env = os.getenv("CORS_ORIGINS", "")
@@ -106,9 +109,19 @@ app.include_router(cfo.router, prefix="/api/cfo", tags=["Major CFO API"])
 app.include_router(context_router.router, prefix="/api/context", tags=["Context Management API"])
 app.include_router(cashflow.router, prefix="/api/cashflow", tags=["Cashflow API"])
 app.include_router(conversations.router, prefix="/api/cfo/conversations", tags=["CFO Conversations API"])
+
+from app.api.routers import insights
+app.include_router(insights.router, prefix="/api/insights", tags=["Proactive Insights API"])
 app.include_router(billing.router, prefix="/billing", tags=["Billing API"])
+app.include_router(onboarding.router, prefix="/api/onboarding", tags=["Onboarding API"])
+app.include_router(bank.router, prefix="/api/bank", tags=["Bank Reconciliation API"])
 app.add_api_route("/api/webhooks/stripe", billing.stripe_webhook, methods=["POST"], tags=["Billing API"])
 
 @app.get("/")
 async def root(_: dict = Depends(verify_token)):
     return {"message": "Welcome to Auditra API"}
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}

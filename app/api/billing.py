@@ -509,12 +509,39 @@ async def public_checkout(
             detail="Missing price_id",
         )
 
+    # Anti-duplicate-subscription: jesli user z tym emailem juz ma aktywne konto
+    # z aktywna subskrypcja, nie pozwalamy na drugie checkout.
+    # Zamiast tego dajemy im sygnal zeby sie zalogowali lub uzyli 'forgot password'.
+    existing_user_result = await db.execute(select(User).where(User.email == payload.email))
+    existing_user = existing_user_result.scalar_one_or_none()
+    if existing_user and existing_user.company_id:
+        company_result = await db.execute(select(Company).where(Company.id == existing_user.company_id))
+        existing_company = company_result.scalar_one_or_none()
+        if existing_company and (existing_company.billing_status or "").lower() in {"active", "trialing"}:
+            frontend_url_redirect = os.getenv("FRONTEND_APP_URL", "http://localhost:3000")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "message": "Konto z tym emailem już istnieje i ma aktywną subskrypcję.",
+                    "reason": "account_exists",
+                    "login_url": f"{frontend_url_redirect}/login",
+                    "reset_url": f"{frontend_url_redirect}/login?forgot=true",
+                },
+            )
+
     frontend = os.getenv("FRONTEND_APP_URL", "http://localhost:3000")
     success_url = f"{frontend}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}"
     cancel_url = f"{frontend}/checkout?canceled=true"
 
     try:
         configure_stripe()
+        from app.services.stripe_billing import trial_days_from_env
+
+        subscription_data: dict = {"metadata": {"source": "public_checkout", "email": payload.email}}
+        trial_days = trial_days_from_env()
+        if trial_days:
+            subscription_data["trial_period_days"] = trial_days
+
         session = stripe.checkout.Session.create(
             customer_email=payload.email,
             mode="subscription",
@@ -523,6 +550,7 @@ async def public_checkout(
             cancel_url=cancel_url,
             metadata={"source": "public_checkout", "email": payload.email},
             allow_promotion_codes=True,
+            subscription_data=subscription_data,
         )
     except stripe.error.StripeError as exc:
         raise HTTPException(

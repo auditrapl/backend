@@ -18,7 +18,12 @@ Zasady:
 - Każde pytanie max 60 znaków
 - Pytania muszą być różnorodne (np. pogłębienie, alternatywa, ryzyko)
 - Pisz po polsku, w tonie biznesowym
-- Zwróć JSON z kluczem "questions" zawierającym listę 3 stringów"""
+
+KRYTYCZNE — FORMAT ODPOWIEDZI:
+- Zwróć WYŁĄCZNIE surowy JSON, bez żadnej preambuły, wstępu ani markdown fences (```).
+- NIE pisz "Here is the JSON" ani "Oto JSON".
+- Pierwszym znakiem odpowiedzi MUSI być `{`, ostatnim `}`.
+- Schemat: {"questions": ["pytanie 1", "pytanie 2", "pytanie 3"]}"""
 
 
 class SuggestedQuestionsOutput(BaseModel):
@@ -53,12 +58,20 @@ async def generate_suggested_questions(
                 response_mime_type="application/json",
                 response_schema=SuggestedQuestionsOutput,
                 temperature=0.7,
-                max_output_tokens=256,
+                # 512 zamiast 256 — Gemini czasem zmarnuje tokeny na preambule
+                # i skonczy zanim wygeneruje JSON. 512 daje margines bezpieczenstwa.
+                max_output_tokens=512,
             ),
         )
 
-        result = SuggestedQuestionsOutput.model_validate_json(response.text)
-        # Ogranicz do 3 i przytnij długie
+        from app.services._json_parse import safe_model_validate_json
+        try:
+            result = safe_model_validate_json(SuggestedQuestionsOutput, response.text)
+        except ValueError as ve:
+            # Pusta odpowiedz lub brak JSON — prawdopodobnie Gemini skonczyl tokeny na preambule
+            logger.warning(f"[SUGGESTIONS] {ve}")
+            return []
+
         questions = [q[:80] for q in result.questions[:3]]
         logger.info(f"[SUGGESTIONS] Generated {len(questions)} questions")
         return questions

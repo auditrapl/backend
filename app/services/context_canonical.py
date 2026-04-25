@@ -7,7 +7,7 @@ import os
 import uuid
 from copy import deepcopy
 from datetime import datetime, timezone
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from pydantic import BaseModel, Field
 from google import genai
@@ -50,6 +50,13 @@ class BusinessModelDetail(BaseModel):
     industry: Optional[str] = Field(None, description="Branża: 'IT/Software', 'E-commerce', 'Budownictwo', 'Fintech'")
 
 
+class FieldSource(BaseModel):
+    """Skad pochodzi wartosc pola w kontekscie kanonicznym."""
+    origin: str = "unknown"  # manual | ai_extracted | seed | ksef | gus_api | vat_whitelist | ai_wizard_extracted | ai_invoice_inferred
+    updated_at: Optional[str] = None  # ISO datetime
+    source_document: Optional[str] = None  # np. "umowa_spolki.pdf"
+
+
 class CanonicalContext(BaseModel):
     """
     Kontekst kanoniczny — wolno-zmieniające się fakty o tym KIM i CZYM jest firma.
@@ -62,6 +69,8 @@ class CanonicalContext(BaseModel):
     unit_economics: UnitEconomics = Field(default_factory=UnitEconomics)
     seasonality_and_patterns: List[str] = Field(default_factory=list)
     canonical_version: int = Field(default=1)
+    # Source tracking per section — skąd pochodzi dana wartość
+    field_sources: Dict[str, FieldSource] = Field(default_factory=dict)
 
 
 # ==============================================================================
@@ -175,7 +184,8 @@ ZASADY:
             temperature=0.0,
         ),
     )
-    return CanonicalContext.model_validate_json(response.text)
+    from app.services._json_parse import safe_model_validate_json
+    return safe_model_validate_json(CanonicalContext, response.text)
 
 
 # ==============================================================================
@@ -212,6 +222,7 @@ async def update_canonical(
     db: AsyncSession,
     company_id: uuid.UUID,
     updates: dict,
+    source: str = "manual",
 ) -> CanonicalContext:
     """Manualna aktualizacja L1 bez LLM (z UI lub zewnętrznych narzędzi)."""
     result = await db.execute(
@@ -239,7 +250,14 @@ async def update_canonical(
     updated = CanonicalContext.model_validate(updated_data)
     updated.canonical_version = current.canonical_version + 1
 
-    record.canonical_data = updated.model_dump()
+    # Track source per updated section
+    now_str = datetime.now(timezone.utc).isoformat()
+    fs = updated.field_sources or {}
+    for key in updates:
+        fs[key] = FieldSource(origin=source, updated_at=now_str)
+    updated.field_sources = fs
+
+    record.canonical_data = updated.model_dump(by_alias=True)
     record.canonical_updated_at = datetime.now(timezone.utc)
     await db.commit()
     await db.refresh(record)
@@ -261,7 +279,18 @@ async def process_and_upsert_canonical(
     )
     record = result.scalar_one_or_none()
     if record:
-        record.canonical_data = merged.model_dump()
+        # Track AI-extracted source for changed sections
+        now_str = datetime.now(timezone.utc).isoformat()
+        fs = merged.field_sources or {}
+        new_dump = new.model_dump()
+        for key, val in new_dump.items():
+            if key.startswith("_") or key in ("canonical_version", "field_sources"):
+                continue
+            if val and val != CanonicalContext.model_fields[key].default:
+                fs[key] = FieldSource(origin="ai_extracted", updated_at=now_str, source_document=text_source[:100])
+        merged.field_sources = fs
+
+        record.canonical_data = merged.model_dump(by_alias=True)
         record.canonical_updated_at = datetime.now(timezone.utc)
         await db.commit()
         await db.refresh(record)

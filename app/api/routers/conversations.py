@@ -179,6 +179,22 @@ async def send_message(
                 full_response_chunks.append(chunk)
                 last_chunk_data = chunk
                 yield f"data: {chunk}\n\n"
+
+                # Save category from triage to conversation (first message only)
+                try:
+                    import json as _jcat
+                    parsed_chunk = _jcat.loads(chunk)
+                    if parsed_chunk.get("phase") == "triage" and parsed_chunk.get("category"):
+                        async with AsyncSessionLocal() as cat_db:
+                            cat_result = await cat_db.execute(
+                                select(Conversation).where(Conversation.id == conversation_id)
+                            )
+                            cat_conv = cat_result.scalar_one_or_none()
+                            if cat_conv and not cat_conv.category:
+                                cat_conv.category = parsed_chunk["category"]
+                                await cat_db.commit()
+                except Exception:
+                    pass
         except Exception as e:
             logger.error(f"CFO stream error: {e}", exc_info=True)
             import json as _jerr
@@ -221,8 +237,9 @@ async def send_message(
 
                 await save_db.commit()
 
-            # Auto-summary w tle (po zapisie odpowiedzi)
-            await maybe_generate_summary(conversation_id)
+            # Auto-summary w tle — fire-and-forget (nie blokuje streama)
+            import asyncio as _aio
+            _aio.create_task(maybe_generate_summary(conversation_id))
 
         except Exception as e:
             logger.error(f"Error saving assistant message: {e}", exc_info=True)
