@@ -509,10 +509,13 @@ class ProactiveInsightSchema(BaseModel):
     description: str = Field(description="Zwięzły, analityczny opis problemu/szansy z twardymi danymi")
     suggested_prompt: str = Field(description="Komenda-prompt uruchamiająca pełną analizę agentów CFO (np. 'Przeanalizuj wzrost DSO o 12 dni...')")
     urgency: str = Field(description="Pilność: 'low', 'medium' lub 'high'")
+    category: str = Field(default="strategia", description="Kategoria: 'podatki', 'plynnosc', 'strategia', 'anomalia', 'koszty', 'klient'")
+    legal_basis: str | None = Field(default=None, description="Podstawa prawna gdy podatkowy (np. 'art. 88 ust. 1 pkt 4 ustawy o VAT')")
+    estimated_savings: float | None = Field(default=None, description="Szacunkowa oszczędność/strata w PLN (dodatnia liczba)")
 
 class DailyBriefingSchema(BaseModel):
-    summary: str = Field(description="Jedno zdanie podsumowania porannej odprawy — executive brief dla CFO (max 3 zdania, twarde liczby, najważniejszy sygnał dnia)")
-    insights: list[ProactiveInsightSchema] = Field(description="Dokładnie 3 insighty z Porannej Odprawy")
+    summary: str = Field(description="Executive brief dla CFO: 2-3 zdania, twarde liczby, najważniejszy sygnał dnia")
+    insights: list[ProactiveInsightSchema] = Field(description="Dynamiczna liczba insightów (1-15) — wygeneruj tyle ile faktycznie widzisz realnych sygnałów w danych. NIE wymyślaj filler'ów. Lepiej 2 mocne niż 5 słabych. Maksimum 15.")
 
 class ProactiveInsightResponse(BaseModel):
     id: UUID

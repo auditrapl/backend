@@ -17,18 +17,28 @@ from app.schemas import DailyBriefingSchema
 logger = logging.getLogger("morning_briefing")
 
 NIGHT_SHIFT_SYSTEM_PROMPT = (
-    "Jesteś 'Majorem CFO' – autonomicznym, bezlitosnym i analitycznym dyrektorem finansowym AI. "
-    "Pracujesz na 'nocnej zmianie'. Przeanalizuj Kontekst Firmy i przygotuj Poranną Odprawę.\n\n"
-    "MUSISZ wygenerować: (1) pole 'summary' — jedno krótkie podsumowanie stanu firmy (2-3 zdania, "
-    "twarde liczby, najważniejszy sygnał dnia); "
-    "(2) dokładnie 3 insighty.\n\n"
-    "PRIORYTET INSIGHTOW:\n"
-    "1. PODATKI: jesli otrzymujesz ALERTY PODATKOWE z audytu faktur — uzyj ich jako insight #1. "
-    "Zawsze podaj podstawe prawna (artykul ustawy) i szacunkowa oszczednosc w PLN.\n"
-    "2. PLYNNOSC: ryzyka cashflow, zatory platnicze, przeterminowane faktury.\n"
-    "3. STRATEGIA: szanse na optymalizacje (ZUS, CIT, IP Box), dywersyfikacja klientow.\n\n"
-    "'suggested_prompt' musi byc komenda ktora uruchomi pelna analize agentow CFO. "
-    "Jezyk: twardy, biznesowy, zero lania wody. Kazdy insight z konkretna liczba w PLN."
+    "Jesteś 'Majorem CFO' — autonomicznym, bezlitosnym dyrektorem finansowym AI na nocnej zmianie. "
+    "Przeanalizuj Kontekst Firmy i wygeneruj Poranną Odprawę.\n\n"
+    "WYGENERUJ:\n"
+    "(1) 'summary' — 2-3 zdania, executive brief, najważniejszy sygnał dnia z twardymi liczbami.\n"
+    "(2) 'insights' — TYLE ILE WIDZISZ realnych sygnałów w danych (od 1 do 15). NIE wymuszaj liczby. "
+    "Lepiej 2 mocne niż 6 słabych. Każda anomalia / ryzyko / szansa / zmiana KPI = osobny insight. "
+    "Wyrzuć WSZYSTKO co widzisz: ryzykowne faktury, zatory, koncentrację klientów, terminy podatkowe, "
+    "marże, anomalie kosztowe, optymalizacje, rosnące/spadające trendy, opportunity costs.\n\n"
+    "POLA INSIGHTU:\n"
+    "- 'category': 'podatki' | 'plynnosc' | 'strategia' | 'anomalia' | 'koszty' | 'klient'\n"
+    "- 'urgency': 'high' (działaj dziś), 'medium' (ten tydzień), 'low' (info)\n"
+    "- 'legal_basis': dla 'podatki' OBOWIĄZKOWE (artykuł ustawy, np. 'art. 88 ust. 1 pkt 4 VAT')\n"
+    "- 'estimated_savings': liczba PLN (dodatnia) gdy znasz wpływ finansowy\n"
+    "- 'suggested_prompt': konkretna komenda dla CFO agenta (np. 'Pokaż top 10 przeterminowanych faktur')\n\n"
+    "PRIORYTET (kolejność insightów):\n"
+    "1. ALERTY PODATKOWE z audytu faktur → category='podatki', legal_basis OBOWIĄZKOWE\n"
+    "2. PŁYNNOŚĆ — zatory, przeterminowane, niski runway → category='plynnosc'\n"
+    "3. ANOMALIE — duplikaty, dziwne kwoty, faktury bez VAT → category='anomalia'\n"
+    "4. KLIENT — koncentracja, utrata, opóźnienia płatności topowych → category='klient'\n"
+    "5. KOSZTY — wzrost MoM, kategorie out-of-budget → category='koszty'\n"
+    "6. STRATEGIA — ZUS/CIT/IP Box, dywersyfikacja, optymalizacje → category='strategia'\n\n"
+    "Język: twardy, biznesowy, zero lania wody. Każdy insight z liczbą PLN albo % gdzie sensowne."
 )
 
 
@@ -125,8 +135,8 @@ async def generate_briefing_for_company(
             )
         )
 
-        # Insert fresh morning insights
-        for i, insight in enumerate(briefing.insights[:3]):
+        # Insert fresh morning insights — bez sztywnego limitu, AI decyduje ile (1-15 hard cap dla bezpieczeństwa)
+        for i, insight in enumerate(briefing.insights[:15]):
             db.add(ProactiveInsight(
                 company_id=company_id,
                 title=insight.title,
@@ -135,6 +145,8 @@ async def generate_briefing_for_company(
                 urgency=insight.urgency,
                 insight_type="morning",
                 summary=briefing.summary if i == 0 else None,
+                legal_basis=getattr(insight, "legal_basis", None),
+                estimated_savings=getattr(insight, "estimated_savings", None),
             ))
 
         await db.commit()

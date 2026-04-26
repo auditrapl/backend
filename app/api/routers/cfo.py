@@ -111,9 +111,12 @@ async def get_morning_briefing(
 
     result = await db.execute(
         select(ProactiveInsight)
-        .where(ProactiveInsight.company_id == company_uuid)
+        .where(
+            ProactiveInsight.company_id == company_uuid,
+            ProactiveInsight.insight_type == "morning",
+            ProactiveInsight.is_dismissed == False,
+        )
         .order_by(ProactiveInsight.created_at.desc())
-        .limit(3)
     )
     insights = result.scalars().all()
     summary = next((i.summary for i in insights if i.summary), None)
@@ -196,9 +199,12 @@ async def generate_morning_briefing_manual(
     # ── Zwróć świeże insighty ──
     result = await db.execute(
         select(ProactiveInsight)
-        .where(ProactiveInsight.company_id == company_uuid)
+        .where(
+            ProactiveInsight.company_id == company_uuid,
+            ProactiveInsight.insight_type == "morning",
+            ProactiveInsight.is_dismissed == False,
+        )
         .order_by(ProactiveInsight.created_at.desc())
-        .limit(3)
     )
     insights = result.scalars().all()
     summary = next((i.summary for i in insights if i.summary), None)
